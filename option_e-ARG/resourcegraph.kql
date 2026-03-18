@@ -1,0 +1,1081 @@
+// =============================================================================
+// Azure Resource Graph — Defender for Cloud Analytical Queries
+// =============================================================================
+//
+// Equivalent of defender-aging-reoccurrence-queries.kql (Log Analytics) and
+// adx-dashboard-functions.kql (ADX) — adapted for Azure Resource Graph.
+//
+// Target:  securityresources (Azure Resource Graph)
+// Run in:  Azure Portal → Resource Graph Explorer, or via Search-AzGraph
+//
+// ARG Schema (assessments — microsoft.security/assessments):
+//   properties.status.code                 — "Healthy", "Unhealthy", "NotApplicable"
+//   properties.metadata.severity           — "High", "Medium", "Low"
+//   properties.risk.level                  — "Critical", "High", "Medium", "Low"
+//   properties.displayName                 — Recommendation display name
+//   properties.resourceDetails.id          — Assessed resource ARM ID (case varies)
+//   properties.resourceDetails.ResourceType— Resource type
+//   properties.resourceDetails.ResourceName— Resource name
+//   properties.resourceDetails.Source      — "Azure", "AWS", "GCP", etc.
+//   properties.status.statusChangeDate     — Last status change date
+//   properties.status.firstEvaluationDate  — First evaluation date (aging source)
+//   properties.status.cause                — "Exempt" for exempted resources
+//   properties.risk.riskFactors            — Array of risk factors
+//   properties.risk.attackPathsReferences  — Array of attack path references
+//   name                                   — Assessment key (recommendation ID)
+//
+// ARG Schema (sub-assessments — microsoft.security/assessments/subassessments):
+//   properties.status.code                 — "Healthy", "Unhealthy", "NotApplicable"
+//   properties.status.severity             — "High", "Medium", "Low"
+//   properties.displayName                 — Finding display name
+//   properties.description                 — Finding description
+//   properties.id                          — Vulnerability ID (CVE)
+//   properties.remediation                 — Remediation guidance
+//   properties.impact                      — Potential impact
+//   properties.category                    — Finding category
+//   properties.resourceDetails.id          — Assessed resource ARM ID
+//
+// LIMITATIONS vs Log Analytics / ADX:
+//   - ARG is point-in-time (current snapshot only) — NO historical data
+//   - Reoccurrence detection is NOT possible (requires Healthy→Unhealthy transitions)
+//   - Daily/monthly trend analysis is NOT possible (no TimeGenerated history)
+//   - ARG has a 1,000 row limit per page — use pagination for large result sets
+//
+// ARG-ONLY ADVANTAGES (not available in Log Analytics):
+//   - Risk level, risk factors, attack paths (CSPM enrichment)
+//   - Exemption cause detection (status.cause == "Exempt")
+//   - Governance assignment status (owner, due date, overdue)
+//   - Multi-cloud source identification (Azure, AWS, GCP, GitHub, etc.)
+//   - No dependency on Continuous Export — queries live data directly
+//
+// =============================================================================
+
+
+// =============================================================================
+// 1. OVERVIEW — Current State Summary
+// =============================================================================
+// Mirrors: Log Analytics queries 1a–1c, ADX ExecutiveSummary()
+
+// 1a. Total counts by status (with risk breakdown)
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = tostring(properties.metadata.severity)
+| extend riskLevel  = tostring(properties.risk.level)
+| extend source     = tolower(coalesce(
+    tostring(properties.resourceDetails.Source),
+    tostring(properties.resourceDetails.source)))
+| summarize
+    TotalFindings      = count(),
+    UnhealthyCount     = countif(statusCode == "Unhealthy"),
+    HealthyCount       = countif(statusCode == "Healthy"),
+    NotApplicableCount = countif(statusCode == "NotApplicable"),
+    HighSeverity       = countif(statusCode == "Unhealthy" and severity =~ "High"),
+    MediumSeverity     = countif(statusCode == "Unhealthy" and severity =~ "Medium"),
+    LowSeverity        = countif(statusCode == "Unhealthy" and severity =~ "Low"),
+    CriticalRisk       = countif(statusCode == "Unhealthy" and riskLevel =~ "Critical"),
+    HighRisk           = countif(statusCode == "Unhealthy" and riskLevel =~ "High"),
+    MediumRisk         = countif(statusCode == "Unhealthy" and riskLevel =~ "Medium"),
+    LowRisk            = countif(statusCode == "Unhealthy" and riskLevel =~ "Low"),
+    CloudSources       = dcount(source)
+| extend
+    ComplianceRate = round(100.0 * HealthyCount / TotalFindings, 1),
+    UnhealthyPct   = round(100.0 * UnhealthyCount / TotalFindings, 1)
+
+
+// 1b. Unhealthy findings by severity
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = tostring(properties.metadata.severity)
+| where statusCode == "Unhealthy"
+| summarize Count = count() by severity
+| order by case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc
+
+
+// 1c. Unhealthy findings by resource type
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode    = tostring(properties.status.code)
+| extend resourceType  = tolower(coalesce(
+    tostring(properties.resourceDetails.ResourceType),
+    tostring(properties.resourceDetails.resourceType)))
+| where statusCode == "Unhealthy"
+| summarize Count = count() by resourceType
+| order by Count desc
+| take 20
+
+
+// =============================================================================
+// 2. AGING ANALYSIS — Time since first evaluation
+// =============================================================================
+// Mirrors: Log Analytics queries 2e–2g, ADX AgingDistribution() / AgingSeverity()
+//
+// Uses properties.status.firstEvaluationDate for authoritative aging.
+// Fallback to properties.status.statusChangeDate when firstEvaluationDate is empty.
+
+// 2a. Aging distribution — bucket chart
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode          = tostring(properties.status.code)
+| extend firstEvaluationDate = todatetime(properties.status.firstEvaluationDate)
+| extend statusChangeDate    = todatetime(properties.status.statusChangeDate)
+| where statusCode == "Unhealthy"
+| extend AgingDate = coalesce(firstEvaluationDate, statusChangeDate)
+| where isnotempty(AgingDate)
+| extend AgingDays = datetime_diff('day', now(), AgingDate)
+| extend AgingBucket = case(
+    AgingDays <= 7,   "0-7 days",
+    AgingDays <= 30,  "8-30 days",
+    AgingDays <= 90,  "31-90 days",
+    AgingDays <= 180, "91-180 days",
+    AgingDays <= 365, "181-365 days",
+    "365+ days")
+| summarize Count = count() by AgingBucket
+| order by case(
+    AgingBucket == "0-7 days",     1,
+    AgingBucket == "8-30 days",    2,
+    AgingBucket == "31-90 days",   3,
+    AgingBucket == "91-180 days",  4,
+    AgingBucket == "181-365 days", 5, 6) asc
+
+
+// 2b. Top 100 oldest unhealthy findings — detailed view
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode          = tostring(properties.status.code)
+| extend severity            = tostring(properties.metadata.severity)
+| extend riskLevel           = tostring(properties.risk.level)
+| extend displayName         = tostring(properties.displayName)
+| extend firstEvaluationDate = todatetime(properties.status.firstEvaluationDate)
+| extend statusChangeDate    = todatetime(properties.status.statusChangeDate)
+| extend resourceId          = tolower(coalesce(
+    tostring(properties.resourceDetails.Id),
+    tostring(properties.resourceDetails.id)))
+| extend resourceName        = tostring(coalesce(
+    properties.resourceDetails.ResourceName,
+    properties.resourceDetails.resourceName))
+| extend resourceType        = tolower(coalesce(
+    tostring(properties.resourceDetails.ResourceType),
+    tostring(properties.resourceDetails.resourceType)))
+| where statusCode == "Unhealthy"
+| extend AgingDate = coalesce(firstEvaluationDate, statusChangeDate)
+| where isnotempty(AgingDate)
+| extend AgingDays             = datetime_diff('day', now(), AgingDate)
+| extend DaysSinceStatusChange = datetime_diff('day', now(), statusChangeDate)
+| project
+    AgingDays,
+    DaysSinceStatusChange,
+    firstEvaluationDate,
+    statusChangeDate,
+    severity,
+    riskLevel,
+    displayName,
+    resourceName,
+    resourceType,
+    resourceId,
+    subscriptionId
+| order by AgingDays desc
+| take 100
+
+
+// 2c. Average aging by resource type
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode          = tostring(properties.status.code)
+| extend firstEvaluationDate = todatetime(properties.status.firstEvaluationDate)
+| extend statusChangeDate    = todatetime(properties.status.statusChangeDate)
+| extend resourceType        = tolower(coalesce(
+    tostring(properties.resourceDetails.ResourceType),
+    tostring(properties.resourceDetails.resourceType)))
+| where statusCode == "Unhealthy"
+| extend AgingDate = coalesce(firstEvaluationDate, statusChangeDate)
+| where isnotempty(AgingDate)
+| extend AgingDays = datetime_diff('day', now(), AgingDate)
+| summarize
+    AvgAgingDays    = round(avg(AgingDays), 0),
+    MaxAgingDays    = max(AgingDays),
+    FindingCount    = count()
+    by resourceType
+| order by AvgAgingDays desc
+| take 20
+
+
+// 2d. Aging by severity
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode          = tostring(properties.status.code)
+| extend severity            = tostring(properties.metadata.severity)
+| extend firstEvaluationDate = todatetime(properties.status.firstEvaluationDate)
+| extend statusChangeDate    = todatetime(properties.status.statusChangeDate)
+| where statusCode == "Unhealthy"
+| extend AgingDate = coalesce(firstEvaluationDate, statusChangeDate)
+| where isnotempty(AgingDate)
+| extend AgingDays = datetime_diff('day', now(), AgingDate)
+| summarize
+    AvgAgingDays = round(avg(AgingDays), 0),
+    MaxAgingDays = max(AgingDays),
+    FindingCount = count()
+    by severity
+| order by case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc
+
+
+// =============================================================================
+// 3. RISK ANALYSIS — ARG-only (CSPM enrichment data)
+// =============================================================================
+// NOT available in Log Analytics — requires Azure Resource Graph.
+// Risk levels (Critical/High/Medium/Low) come from Defender CSPM attack path analysis.
+
+// 3a. Risk level distribution
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| extend riskLevel  = tostring(properties.risk.level)
+| where statusCode == "Unhealthy"
+| where isnotempty(riskLevel)
+| summarize Count = count() by riskLevel
+| order by case(
+    riskLevel =~ "Critical", 1,
+    riskLevel =~ "High",     2,
+    riskLevel =~ "Medium",   3,
+    riskLevel =~ "Low",      4, 5) asc
+
+
+// 3b. Risk factors breakdown — which risk factors appear most
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode   = tostring(properties.status.code)
+| extend riskFactors  = properties.risk.riskFactors
+| where statusCode == "Unhealthy"
+| where isnotempty(riskFactors)
+| mv-expand riskFactor = riskFactors
+| summarize Count = count() by tostring(riskFactor)
+| order by Count desc
+| take 20
+
+
+// 3c. Attack paths summary — recommendations with most attack path references
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode     = tostring(properties.status.code)
+| extend displayName    = tostring(properties.displayName)
+| extend severity       = tostring(properties.metadata.severity)
+| extend riskLevel      = tostring(properties.risk.level)
+| extend attackPaths    = properties.risk.attackPathsReferences
+| extend attackPathCount = array_length(iff(isnull(attackPaths), dynamic([]), attackPaths))
+| where statusCode == "Unhealthy"
+| where attackPathCount > 0
+| summarize
+    TotalAttackPaths   = sum(attackPathCount),
+    AffectedResources  = count()
+    by displayName, severity, riskLevel
+| order by TotalAttackPaths desc
+| take 25
+
+
+// 3d. Risk level × severity matrix
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = tostring(properties.metadata.severity)
+| extend riskLevel  = tostring(properties.risk.level)
+| where statusCode == "Unhealthy"
+| where isnotempty(riskLevel)
+| summarize Count = count() by riskLevel, severity
+| order by case(riskLevel =~ "Critical", 1, riskLevel =~ "High", 2, riskLevel =~ "Medium", 3, riskLevel =~ "Low", 4, 5) asc,
+           case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc
+
+
+// =============================================================================
+// 4. TOP RECOMMENDATIONS — Pareto analysis
+// =============================================================================
+// Mirrors: ADX TopRecommendations()
+
+// 4a. Top 25 recommendations by affected resource count
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode  = tostring(properties.status.code)
+| extend severity    = tostring(properties.metadata.severity)
+| extend riskLevel   = tostring(properties.risk.level)
+| extend displayName = tostring(properties.displayName)
+| extend assessmentKey = name
+| extend resourceId  = tolower(coalesce(
+    tostring(properties.resourceDetails.Id),
+    tostring(properties.resourceDetails.id)))
+| extend firstEvaluationDate = todatetime(properties.status.firstEvaluationDate)
+| extend statusChangeDate    = todatetime(properties.status.statusChangeDate)
+| where statusCode == "Unhealthy"
+| extend AgingDate = coalesce(firstEvaluationDate, statusChangeDate)
+| summarize
+    AffectedResources = dcount(resourceId),
+    AvgAgingDays      = round(avg(iff(isnotempty(AgingDate), datetime_diff('day', now(), AgingDate), toint(""))), 0),
+    MaxAgingDays      = max(iff(isnotempty(AgingDate), datetime_diff('day', now(), AgingDate), toint(""))),
+    Severities        = make_set(severity),
+    RiskLevels        = make_set(riskLevel)
+    by assessmentKey, displayName
+| extend TopSeverity = iff(set_has_element(Severities, "High"), "High",
+                       iff(set_has_element(Severities, "Medium"), "Medium", "Low"))
+| extend TopRisk = iff(set_has_element(RiskLevels, "Critical"), "Critical",
+                  iff(set_has_element(RiskLevels, "High"), "High",
+                  iff(set_has_element(RiskLevels, "Medium"), "Medium", "Low")))
+| project
+    displayName,
+    TopSeverity,
+    TopRisk,
+    AffectedResources,
+    AvgAgingDays,
+    MaxAgingDays,
+    assessmentKey
+| order by AffectedResources desc
+| take 25
+
+
+// =============================================================================
+// 5. SEVERITY × RESOURCE TYPE HEATMAP
+// =============================================================================
+// Mirrors: ADX SeverityResourceHeatmap()
+
+// 5a. Finding counts at the intersection of severity and resource type
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode    = tostring(properties.status.code)
+| extend severity      = tostring(properties.metadata.severity)
+| extend resourceType  = tolower(coalesce(
+    tostring(properties.resourceDetails.ResourceType),
+    tostring(properties.resourceDetails.resourceType)))
+| extend resourceId    = tolower(coalesce(
+    tostring(properties.resourceDetails.Id),
+    tostring(properties.resourceDetails.id)))
+| extend firstEvaluationDate = todatetime(properties.status.firstEvaluationDate)
+| extend statusChangeDate    = todatetime(properties.status.statusChangeDate)
+| where statusCode == "Unhealthy"
+| extend AgingDate = coalesce(firstEvaluationDate, statusChangeDate)
+| summarize
+    FindingCount    = count(),
+    AvgAgingDays    = round(avg(iff(isnotempty(AgingDate), datetime_diff('day', now(), AgingDate), toint(""))), 0),
+    UniqueResources = dcount(resourceId)
+    by severity, resourceType
+| order by case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc,
+           FindingCount desc
+
+
+// =============================================================================
+// 6. EXEMPTIONS / NOT APPLICABLE — Exemption analysis
+// =============================================================================
+// Mirrors: Understanding-NotApplicable-and-Exemptions.md queries (adapted for ARG)
+// ARG-only: properties.status.cause == "Exempt" identifies manually exempted resources
+
+// 6a. Exemption summary — total exempted vs active
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode  = tostring(properties.status.code)
+| extend statusCause = tostring(properties.status.cause)
+| summarize
+    TotalFindings   = count(),
+    Unhealthy       = countif(statusCode == "Unhealthy"),
+    NotApplicable   = countif(statusCode == "NotApplicable"),
+    Exempted        = countif(statusCause == "Exempt"),
+    Healthy         = countif(statusCode == "Healthy")
+| extend ExemptionRate = round(100.0 * Exempted / TotalFindings, 1)
+
+
+// 6b. Exempted findings by recommendation
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode  = tostring(properties.status.code)
+| extend statusCause = tostring(properties.status.cause)
+| extend displayName = tostring(properties.displayName)
+| extend severity    = tostring(properties.metadata.severity)
+| extend assessmentKey = name
+| where statusCause == "Exempt"
+| summarize ExemptedCount = count() by displayName, severity, assessmentKey
+| order by ExemptedCount desc
+| take 25
+
+
+// 6c. Exempted vs unhealthy by severity (audit: are we over-exempting?)
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode  = tostring(properties.status.code)
+| extend statusCause = tostring(properties.status.cause)
+| extend severity    = tostring(properties.metadata.severity)
+| summarize
+    Unhealthy = countif(statusCode == "Unhealthy"),
+    Exempted  = countif(statusCause == "Exempt"),
+    Healthy   = countif(statusCode == "Healthy")
+    by severity
+| extend ExemptionPct = round(100.0 * Exempted / (Unhealthy + Exempted + Healthy), 1)
+| order by case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc
+
+
+// =============================================================================
+// 7. MULTI-CLOUD — Environment breakdown
+// =============================================================================
+// ARG-only: Cloud source available from properties.resourceDetails.Source
+
+// 7a. Findings by cloud environment
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = tostring(properties.metadata.severity)
+| extend source     = tolower(coalesce(
+    tostring(properties.resourceDetails.Source),
+    tostring(properties.resourceDetails.source)))
+| extend environment = case(
+    source =~ "azure" or source =~ "onpremise", "Azure",
+    source =~ "aws",         "AWS",
+    source =~ "gcp",         "GCP",
+    source =~ "github",      "GitHub",
+    source =~ "gitlab",      "GitLab",
+    source =~ "azuredevops", "AzureDevOps",
+    source =~ "dockerhub",   "DockerHub",
+    source =~ "jfrog",       "JFrog",
+    "Other")
+| where statusCode == "Unhealthy"
+| summarize
+    FindingCount    = count(),
+    HighSeverity    = countif(severity =~ "High"),
+    MediumSeverity  = countif(severity =~ "Medium"),
+    LowSeverity     = countif(severity =~ "Low")
+    by environment
+| order by FindingCount desc
+
+
+// 7b. Multi-cloud severity × environment matrix
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = tostring(properties.metadata.severity)
+| extend source     = tolower(coalesce(
+    tostring(properties.resourceDetails.Source),
+    tostring(properties.resourceDetails.source)))
+| extend environment = case(
+    source =~ "azure" or source =~ "onpremise", "Azure",
+    source =~ "aws", "AWS",
+    source =~ "gcp", "GCP",
+    source =~ "github", "GitHub",
+    source =~ "gitlab", "GitLab",
+    source =~ "azuredevops", "AzureDevOps",
+    "Other")
+| where statusCode == "Unhealthy"
+| summarize Count = count() by environment, severity
+| order by environment asc, case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc
+
+
+// =============================================================================
+// 8. SUB-ASSESSMENTS — Vulnerability-level analysis
+// =============================================================================
+// Mirrors: Log Analytics SecurityNestedRecommendation queries
+// ARG type: microsoft.security/assessments/subassessments
+
+// 8a. Sub-assessment status summary
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = coalesce(
+    tostring(properties.status.severity),
+    tostring(properties.additionalData.severity))
+| summarize
+    TotalFindings      = count(),
+    UnhealthyCount     = countif(statusCode == "Unhealthy"),
+    HealthyCount       = countif(statusCode == "Healthy"),
+    NotApplicableCount = countif(statusCode == "NotApplicable")
+| extend UnhealthyPct = round(100.0 * UnhealthyCount / TotalFindings, 1)
+
+
+// 8b. Sub-assessment severity breakdown
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend statusCode = tostring(properties.status.code)
+| extend severity   = coalesce(
+    tostring(properties.status.severity),
+    tostring(properties.additionalData.severity))
+| where statusCode == "Unhealthy"
+| summarize Count = count() by severity
+| order by case(severity =~ "High", 1, severity =~ "Medium", 2, severity =~ "Low", 3, 4) asc
+
+
+// 8c. Sub-assessment by resource type
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend statusCode    = tostring(properties.status.code)
+| extend resourceId    = tolower(coalesce(
+    tostring(properties.resourceDetails.Id),
+    tostring(properties.resourceDetails.id)))
+| extend resourceType  = extract(@"/providers/([^/]+/[^/]+)", 1, resourceId)
+| where statusCode == "Unhealthy"
+| summarize Count = count() by resourceType
+| order by Count desc
+| take 20
+
+
+// 8d. Top vulnerabilities — most common CVEs/findings
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend statusCode     = tostring(properties.status.code)
+| extend vulnerabilityId = tostring(properties.id)
+| extend displayName     = tostring(properties.displayName)
+| extend severity        = coalesce(
+    tostring(properties.status.severity),
+    tostring(properties.additionalData.severity))
+| extend category        = tostring(properties.category)
+| where statusCode == "Unhealthy"
+| summarize
+    AffectedResources = count(),
+    Severities        = make_set(severity)
+    by vulnerabilityId, displayName, category
+| extend TopSeverity = iff(set_has_element(Severities, "High"), "High",
+                       iff(set_has_element(Severities, "Medium"), "Medium", "Low"))
+| project vulnerabilityId, displayName, category, TopSeverity, AffectedResources
+| order by AffectedResources desc
+| take 50
+
+
+// =============================================================================
+// 9. GOVERNANCE ASSIGNMENTS — Remediation tracking
+// =============================================================================
+// ARG-only: Governance assignments are not available in Log Analytics / ADX.
+// Joins assessments with governanceassignments to show ownership and due dates.
+
+// 9a. Governance status summary
+securityresources
+| where type =~ "microsoft.security/assessments/governanceassignments"
+| extend dueDate = todatetime(properties.remediationDueDate)
+| extend owner   = iff(isempty(tostring(properties.owner)), "unspecified", tostring(properties.owner))
+| extend governanceStatus = case(
+    isnull(dueDate),     "NoDueDate",
+    dueDate >= bin(now(), 1d), "OnTime",
+    "Overdue")
+| summarize
+    TotalAssigned = count(),
+    OnTime        = countif(governanceStatus == "OnTime"),
+    Overdue       = countif(governanceStatus == "Overdue"),
+    NoDueDate     = countif(governanceStatus == "NoDueDate")
+| extend OverdueRate = round(100.0 * Overdue / TotalAssigned, 1)
+
+
+// 9b. Governance assignments by owner
+securityresources
+| where type =~ "microsoft.security/assessments/governanceassignments"
+| extend dueDate = todatetime(properties.remediationDueDate)
+| extend owner   = iff(isempty(tostring(properties.owner)), "unspecified", tostring(properties.owner))
+| extend governanceStatus = case(
+    isnull(dueDate),     "NoDueDate",
+    dueDate >= bin(now(), 1d), "OnTime",
+    "Overdue")
+| summarize
+    AssignedCount = count(),
+    OverdueCount  = countif(governanceStatus == "Overdue"),
+    OnTimeCount   = countif(governanceStatus == "OnTime")
+    by owner
+| extend OverdueRate = round(100.0 * OverdueCount / AssignedCount, 1)
+| order by OverdueCount desc
+| take 20
+
+
+// =============================================================================
+// 10. VA vs CONFIGURATION — Distinguishing Vulnerability Assessment findings
+//     from configuration/posture recommendations
+// =============================================================================
+//
+// Defender for Cloud produces two fundamentally different finding types:
+//
+//   1. VULNERABILITY ASSESSMENT (VA) findings — individual CVEs or VA rule IDs
+//      (e.g., CVE-2024-1234, VA1234) produced by vulnerability scanners. These
+//      live as SUB-ASSESSMENTS (microsoft.security/assessments/subassessments)
+//      nested under umbrella parent recommendations like "Machines should have
+//      vulnerability findings resolved" or "SQL databases should have
+//      vulnerability findings resolved".
+//
+//   2. CONFIGURATION recommendations — posture/compliance checks like "Storage
+//      accounts should use private link" or "MFA should be enabled". These are
+//      PARENT ASSESSMENTS (microsoft.security/assessments) with no nested
+//      sub-assessments.
+//
+// KEY DISCRIMINATORS:
+//
+//   At the sub-assessment level:
+//     properties.additionalData.assessedResourceType — identifies the VA scanner
+//     that produced the finding. Only VA findings have this field populated with
+//     scanner-specific values.
+//
+//   At the parent assessment level:
+//     properties.additionalData.subAssessmentsLink — non-empty for VA umbrella
+//     recommendations (they have nested CVE/VA findings). Empty/absent for
+//     configuration recommendations.
+//
+// KNOWN assessedResourceType VALUES (VA scanners):
+//
+//   | assessedResourceType                       | Scanner / Source                    |
+//   |--------------------------------------------|-------------------------------------|
+//   | GeneralVulnerability                       | OS/software CVEs (TVM-based)        |
+//   | ServerVulnerabilityTvm                     | Server VA via Microsoft TVM engine   |
+//   | ManagedAggregatedServerVulnerabilityTvm    | Aggregated TVM (managed clusters)   |
+//   | SqlServerVulnerability                     | SQL VA (VA1234-style rule IDs)      |
+//   | SqlVirtualMachineVulnerability             | SQL on VM VA findings               |
+//   | DependencyCveVulnerability                 | Dependency / container image CVEs   |
+//
+//   Run query 10a below to discover which types exist in YOUR environment.
+//
+// =============================================================================
+
+
+// 10a. Discovery — enumerate all assessedResourceType values in your environment
+// Run this first to see which VA scanner types are active before filtering.
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend assessedResourceType = tostring(properties.additionalData.assessedResourceType)
+| summarize
+    FindingCount      = count(),
+    UniqueVulns       = dcount(tostring(properties.id)),
+    AffectedResources = dcount(tolower(coalesce(
+        tostring(properties.resourceDetails.id),
+        tostring(properties.resourceDetails.Id))))
+    by assessedResourceType
+| order by FindingCount desc
+
+
+// 10b. All VA findings across all scanner types — unified view
+// Queries sub-assessments directly to get individual CVE/VA-level findings.
+// This bypasses the parent "umbrella" recommendations entirely — you get the
+// actual vulnerability IDs, not "SQL databases should have vulnerability
+// findings resolved".
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend assessedResourceType = tostring(properties.additionalData.assessedResourceType)
+| where assessedResourceType in (
+    "GeneralVulnerability",
+    "ServerVulnerabilityTvm",
+    "ManagedAggregatedServerVulnerabilityTvm",
+    "SqlServerVulnerability",
+    "SqlVirtualMachineVulnerability",
+    "DependencyCveVulnerability")
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend ResourceId = tolower(coalesce(
+    tostring(properties.resourceDetails.id),
+    tostring(properties.resourceDetails.Id)))
+| extend Severity = coalesce(
+    tostring(properties.status.severity),
+    tostring(properties.additionalData.severity))
+| extend SeverityRank = case(
+    Severity =~ "High", 4, Severity =~ "Medium", 3,
+    Severity =~ "Low", 2, Severity =~ "Informational" or Severity =~ "Info", 1, 0)
+| project
+    VulnerabilityId    = tostring(properties.id),
+    DisplayName        = tostring(properties.displayName),
+    assessedResourceType,
+    Severity,
+    SeverityRank,
+    CvssScore          = toreal(properties.additionalData.cvss.base),
+    Patchable          = tostring(properties.additionalData.patchable),
+    ResourceId,
+    ResourceGroup      = extract(@"(?i)/resourcegroups/([^/]+)", 1, ResourceId),
+    ResourceName       = extract(@"([^/]+)$", 1, ResourceId),
+    Category           = tostring(properties.category),
+    Remediation        = tostring(properties.remediation),
+    subscriptionId
+| order by SeverityRank desc, CvssScore desc
+
+
+// 10c. Parent assessments — classify as VA vs Configuration
+// Uses subAssessmentsLink to distinguish umbrella VA recommendations from
+// configuration/posture recommendations at the parent level.
+// VA umbrellas: "Machines should have vulnerability findings resolved", etc.
+// Config: "Storage accounts should use private link", "MFA should be enabled", etc.
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend SubAssessmentsLink = tostring(properties.additionalData.subAssessmentsLink)
+| extend RecommendationType = iff(isnotempty(SubAssessmentsLink),
+    "Vulnerability Assessment", "Configuration")
+| extend displayName = tostring(properties.displayName)
+| extend severity    = tostring(properties.metadata.severity)
+| extend resourceId  = tolower(coalesce(
+    tostring(properties.resourceDetails.Id),
+    tostring(properties.resourceDetails.id)))
+| project
+    RecommendationType,
+    displayName,
+    severity,
+    assessmentKey    = name,
+    resourceType     = extract(@"/providers/([^/]+/[^/]+)", 1, resourceId),
+    resourceName     = extract(@"([^/]+)$", 1, resourceId),
+    resourceGroup    = resourceGroup,
+    SubAssessmentsLink,
+    Link             = tostring(properties.links.azurePortal),
+    subscriptionId,
+    resourceId
+| order by RecommendationType asc, severity asc, displayName asc
+
+
+// 10d. Summary — VA vs Configuration split with severity breakdown
+// Quick executive view: how many unhealthy findings are VA-related vs config.
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend SubAssessmentsLink = tostring(properties.additionalData.subAssessmentsLink)
+| extend RecommendationType = iff(isnotempty(SubAssessmentsLink),
+    "Vulnerability Assessment", "Configuration")
+| extend severity = tostring(properties.metadata.severity)
+| summarize
+    TotalFindings  = count(),
+    HighSeverity   = countif(severity =~ "High"),
+    MediumSeverity = countif(severity =~ "Medium"),
+    LowSeverity    = countif(severity =~ "Low")
+    by RecommendationType
+| order by RecommendationType asc
+
+
+// 10e. VA scanner type breakdown — finding counts per scanner
+// Drills into sub-assessments to show which VA scanners (TVM, SQL VA, etc.)
+// are producing the most findings. Useful for prioritising remediation by
+// scanner type and understanding exposure surface per technology.
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend assessedResourceType = tostring(properties.additionalData.assessedResourceType)
+| extend Severity = coalesce(
+    tostring(properties.status.severity),
+    tostring(properties.additionalData.severity))
+| summarize
+    TotalFindings     = count(),
+    HighCount         = countif(Severity =~ "High"),
+    MediumCount       = countif(Severity =~ "Medium"),
+    LowCount          = countif(Severity =~ "Low"),
+    UniqueCVEs        = dcount(tostring(properties.id)),
+    AffectedResources = dcount(tolower(coalesce(
+        tostring(properties.resourceDetails.id),
+        tostring(properties.resourceDetails.Id)))),
+    PatchableCount    = countif(tostring(properties.additionalData.patchable) =~ "true")
+    by assessedResourceType
+| extend PatchablePct = round(100.0 * PatchableCount / TotalFindings, 1)
+| order by TotalFindings desc
+
+
+// 10f. Configuration-only recommendations — excludes all VA umbrella parents
+// Returns ONLY posture/compliance recommendations (no nested VA findings).
+// Use this when you want a clean list of configuration issues to remediate
+// without the noise of VA umbrella recommendations like "Machines should have
+// vulnerability findings resolved".
+securityresources
+| where type =~ "microsoft.security/assessments"
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend SubAssessmentsLink = tostring(properties.additionalData.subAssessmentsLink)
+| where isempty(SubAssessmentsLink)   // <-- excludes VA umbrella parents
+| extend resourceId = tolower(coalesce(
+    tostring(properties.resourceDetails.Id),
+    tostring(properties.resourceDetails.id)))
+| project
+    displayName      = tostring(properties.displayName),
+    severity         = tostring(properties.metadata.severity),
+    assessmentKey    = name,
+    resourceType     = extract(@"/providers/([^/]+/[^/]+)", 1, resourceId),
+    resourceName     = extract(@"([^/]+)$", 1, resourceId),
+    resourceGroup    = resourceGroup,
+    Description      = tostring(properties.metadata.description),
+    Remediation      = tostring(properties.metadata.remediationDescription),
+    Link             = tostring(properties.links.azurePortal),
+    subscriptionId,
+    resourceId
+| order by severity asc, displayName asc
+
+
+// 10g. SOLUTION TEAM DASHBOARD — VA findings with parent recommendation title
+//      and subscription name (full detail export)
+//
+// This query joins THREE ARG tables to produce a dashboard-ready dataset:
+//
+//   1. Sub-assessments  → individual CVE/VA findings with severity, remediation
+//   2. Assessments      → parent recommendation title (e.g., "Machines should
+//                          have vulnerability findings resolved")
+//   3. Resource containers → subscription display name
+//
+// HOW THE JOIN WORKS:
+//   Each sub-assessment ARM ID contains the parent assessment key:
+//     /subscriptions/{sub}/.../assessments/{assessmentKey}/subassessments/{id}
+//   We extract {assessmentKey} and join with the assessments table to retrieve
+//   the parent's displayName. Because the same assessment key maps to the same
+//   recommendation title regardless of resource, we first deduplicate the
+//   parents into a lookup of (assessmentKey → title) to keep the join small.
+//
+// ARG LIMITATION: Max 1,000 rows per page. For full extraction, use
+// Export-CustomerVulnerabilities.ps1 with skip-token pagination, or run
+// this query in the portal with "Download as CSV" which auto-paginates.
+//
+// COLUMN ORDER (matches solution team dashboard spec):
+//   SubscriptionId, SubscriptionName, ResourceName, ResourceType, Severity,
+//   VulnerabilityId, DisplayName, ParentRecommendation, Remediation,
+//   ResourceId, ResourceGroup, VAScannerType
+//
+securityresources
+| where type =~ "microsoft.security/assessments/subassessments"
+| extend assessedResourceType = tostring(properties.additionalData.assessedResourceType)
+| where assessedResourceType in (
+    "GeneralVulnerability",
+    "ServerVulnerabilityTvm",
+    "ManagedAggregatedServerVulnerabilityTvm",
+    "SqlServerVulnerability",
+    "SqlVirtualMachineVulnerability",
+    "DependencyCveVulnerability")
+| extend statusCode = tostring(properties.status.code)
+| where statusCode == "Unhealthy"
+| extend ResourceId = tolower(coalesce(
+    tostring(properties.resourceDetails.id),
+    tostring(properties.resourceDetails.Id)))
+| extend Severity = coalesce(
+    tostring(properties.status.severity),
+    tostring(properties.additionalData.severity))
+| extend assessmentKey = extract(@"(?i)microsoft\.security/assessments/([^/]+)/subassessments", 1, id)
+| extend subAssessmentId = extract(@"(?i)/subassessments/(.+)$", 1, id)
+| extend RawResourceType = extract(@"/providers/([^/]+/[^/]+)", 1, ResourceId)
+| project
+    subscriptionId,
+    ResourceName       = extract(@"([^/]+)$", 1, ResourceId),
+    ResourceType       = case(
+        RawResourceType =~ "Microsoft.Compute/virtualMachines",            "Virtual Machine",
+        RawResourceType =~ "Microsoft.Compute/virtualMachineScaleSets",    "VM Scale Set",
+        RawResourceType =~ "Microsoft.HybridCompute/machines",             "Arc Machine",
+        RawResourceType =~ "Microsoft.Sql/servers",                        "SQL Server",
+        RawResourceType =~ "Microsoft.Sql/servers/databases",              "SQL Database",
+        RawResourceType =~ "Microsoft.Sql/managedInstances",               "SQL Managed Instance",
+        RawResourceType =~ "Microsoft.Sql/managedInstances/databases",     "SQL MI Database",
+        RawResourceType =~ "Microsoft.DBforPostgreSQL/flexibleServers",    "PostgreSQL Flexible Server",
+        RawResourceType =~ "Microsoft.DBforMySQL/flexibleServers",         "MySQL Flexible Server",
+        RawResourceType =~ "Microsoft.ContainerService/managedClusters",   "AKS Cluster",
+        RawResourceType =~ "Microsoft.ContainerRegistry/registries",       "Container Registry",
+        RawResourceType =~ "Microsoft.Web/sites",                          "App Service",
+        RawResourceType =~ "Microsoft.Storage/storageAccounts",            "Storage Account",
+        RawResourceType =~ "Microsoft.KeyVault/vaults",                    "Key Vault",
+        RawResourceType =~ "Microsoft.Network/virtualNetworks",            "Virtual Network",
+        RawResourceType =~ "Microsoft.Network/networkSecurityGroups",      "NSG",
+        RawResourceType =~ "Microsoft.Network/applicationGateways",        "Application Gateway",
+        RawResourceType =~ "Microsoft.Network/loadBalancers",              "Load Balancer",
+        RawResourceType =~ "Microsoft.Network/publicIPAddresses",          "Public IP",
+        RawResourceType =~ "Microsoft.Synapse/workspaces",                 "Synapse Workspace",
+        RawResourceType =~ "Microsoft.DocumentDB/databaseAccounts",        "Cosmos DB",
+        RawResourceType =~ "Microsoft.App/containerApps",                  "Container App",
+        RawResourceType =~ "Microsoft.ApiManagement/service",              "API Management",
+        RawResourceType),
+    Severity,
+    SeverityRank       = case(
+        Severity =~ "High", 4, Severity =~ "Medium", 3,
+        Severity =~ "Low", 2, Severity =~ "Informational" or Severity =~ "Info", 1, 0),
+    VulnerabilityId    = tostring(properties.id),
+    DisplayName        = tostring(properties.displayName),
+    Remediation        = tostring(properties.remediation),
+    // Portal link: try sub-assessment link first, fall back to constructed URL
+    PortalLink         = coalesce(
+        tostring(properties.links.azurePortalUri),
+        tostring(properties.links.azurePortal),
+        strcat("https://portal.azure.com/#blade/Microsoft_Azure_Security/GenericRecommendationDetailsBlade/assessmentKey/",
+               assessmentKey, "/subAssessmentId/", subAssessmentId)),
+    ResourceId,
+    ResourceGroup      = extract(@"(?i)/resourcegroups/([^/]+)", 1, ResourceId),
+    VAScannerType      = assessedResourceType,
+    assessmentKey
+| join kind=leftouter (
+    // Lookup: parent assessment key → recommendation title + severity
+    securityresources
+    | where type =~ "microsoft.security/assessments"
+    | project assessmentKey = tolower(name),
+              ParentRecommendation = tostring(properties.displayName),
+              ParentSeverity       = tostring(properties.metadata.severity)
+    | distinct assessmentKey, ParentRecommendation, ParentSeverity
+) on assessmentKey
+| join kind=leftouter (
+    // Lookup: subscription ID → subscription display name
+    resourcecontainers
+    | where type =~ "microsoft.resources/subscriptions"
+    | project subscriptionId, SubscriptionName = name
+) on subscriptionId
+| project
+    SubscriptionId     = subscriptionId,
+    SubscriptionName,
+    ResourceName,
+    ResourceType,
+    Severity,
+    VulnerabilityId,
+    DisplayName,
+    ParentRecommendation,
+    ParentSeverity,
+    Remediation,
+    PortalLink,
+    ResourceId,
+    ResourceGroup,
+    VAScannerType
+| order by Severity asc, VulnerabilityId asc
+
+
+// =============================================================================
+// 11. REFERENCE — RecommendationState / status.code values explained
+// =============================================================================
+// Uncomment and run to see a quick reference:
+//
+// datatable(StatusCode:string, Meaning:string, Action:string) [
+//     "Healthy",       "Resource is compliant / not vulnerable",                "None",
+//     "Unhealthy",     "Active vulnerability or baseline deviation",            "Remediate",
+//     "NotApplicable", "Assessment rule does not apply or resource is exempted", "Review exemption"
+// ]
+
+
+// #############################################################################
+// APPENDIX — Portal Reference Queries (raw, unmodified)
+// #############################################################################
+// The queries below are captured directly from the Defender for Cloud portal's
+// Recommendations blade. They include portal-internal comments and verbose
+// column extraction logic. Kept here for reference; use the clean queries above
+// for analysis and dashboards.
+
+
+// APPENDIX A: Recommendations Resource Pivot Grid (portal query)
+securityresources 
+| where type =~ "microsoft.security/assessments"
+| extend assessmentType = (
+        iff(type == "microsoft.security/assessments", tostring(properties.metadata.assessmentType), dynamic(null)))
+| where (
+    (type == "microsoft.security/assessments" and (assessmentType in~ ("BuiltIn", "CustomerManaged", "BuiltInPolicy"))))
+| extend recommendationCategory = (
+        iff(type == "microsoft.security/assessments", tostring(properties.metadata.recommendationCategory), dynamic(null)))
+| extend riskLevelText = (
+        iff(type == "microsoft.security/assessments", tostring(properties.risk.level), dynamic(null)))
+| extend severity = (
+        iff(type == "microsoft.security/assessments", tostring(properties.metadata.severity), dynamic(null)))
+| extend isSeverityBasedRiskEnabled = false
+| extend riskLevelText = iff(isSeverityBasedRiskEnabled and isempty(riskLevelText), severity, riskLevelText)
+| extend isContextualRisk = (
+        iff(type == "microsoft.security/assessments", iff(isnull(properties.risk.isContextualRisk), false, tobool(properties.risk.isContextualRisk)), dynamic(null)))
+| extend riskLevel = (
+        iff(type == "microsoft.security/assessments", case(riskLevelText =~ "Critical", 4,
+          riskLevelText =~ "High", 3,
+          riskLevelText =~ "Medium", 2,
+          riskLevelText =~ "Low", 1,
+          0), dynamic(null)))
+| extend riskLevel = iff(isContextualRisk or isSeverityBasedRiskEnabled, riskLevel, 0)
+| extend assessmentTypeSkimmed = (
+        iff(type == "microsoft.security/assessments", case(
+            tostring(properties.metadata.assessmentType) == "BuiltIn", "BuiltIn",
+            tostring(properties.metadata.assessmentType) == "BuiltInPolicy", "BuiltIn",
+            tostring(properties.metadata.assessmentType) == "CustomPolicy", "Custom",
+            tostring(properties.metadata.assessmentType) == "CustomerManaged", "Custom",
+            tostring(properties.metadata.assessmentType) == "ManualCustomPolicy", "Custom",
+            tostring(properties.metadata.assessmentType) == "ManualBuiltInPolicy", "BuiltIn",
+            dynamic(null)
+        ), dynamic(null)))
+| extend assessmentId = tolower(id)
+| extend assessmentKey = (
+        iff(type == "microsoft.security/assessments", name, dynamic(null)))
+| extend source = (
+        iff(type == "microsoft.security/assessments", trim(' ', tolower(coalesce(tostring(properties.resourceDetails.Source), tostring(properties.resourceDetails.source)))), dynamic(null)))
+| extend statusCode = (
+        iff(type == "microsoft.security/assessments", tostring(properties.status.code), dynamic(null)))
+| extend resourceId = (
+        iff(type == "microsoft.security/assessments", tolower(trim(" ", tostring(case(source =~ "azure", coalesce(properties.resourceDetails.Id, properties.resourceDetails.id),
+    (type == "microsoft.security/assessments" and (source =~ "aws" and isnotempty(tostring(properties.resourceDetails.ConnectorId)))), coalesce(properties.resourceDetails.Id, properties.resourceDetails.id),
+    (type == "microsoft.security/assessments" and (source =~ "gcp" and isnotempty(tostring(properties.resourceDetails.ConnectorId)))), coalesce(properties.resourceDetails.Id, properties.resourceDetails.id),
+    source =~ "aws", properties.resourceDetails.AzureResourceId,
+    source =~ "gcp", properties.resourceDetails.AzureResourceId,
+    extract("^(?i)(.+)/providers/Microsoft.Security/assessments/.+$",1,id)
+    )))), dynamic(null)))
+| extend resourceName = (
+        iff(type == "microsoft.security/assessments", tostring(coalesce(properties.resourceDetails.ResourceName, properties.resourceDetails.resourceName, properties.additionalData.CloudNativeResourceName, properties.additionalData.ResourceName, properties.additionalData.resourceName, split(resourceId, '/')[-1], extract(@"(.+)/(.+)", 2, resourceId))), dynamic(null)))
+| extend resourceType = (
+        iff(type == "microsoft.security/assessments", tolower(coalesce(properties.resourceDetails.ResourceType, properties.resourceDetails.resourceType)), dynamic(null)))
+| extend riskFactors = (
+        iff(type == "microsoft.security/assessments", iff(isnull(properties.risk.riskFactors), dynamic([]), properties.risk.riskFactors), dynamic(null)))
+| extend attackPaths = array_length((
+        iff(type == "microsoft.security/assessments", iff(isnull(properties.risk.attackPathsReferences), dynamic([]), properties.risk.attackPathsReferences), dynamic(null))))
+| extend displayName = (
+        iff(type == "microsoft.security/assessments", tostring(properties.displayName), dynamic(null)))
+| extend statusCause = (
+        iff(type == "microsoft.security/assessments", tostring(properties.status.cause), dynamic(null)))
+| extend isExempt = (
+        iff(type == "microsoft.security/assessments", iff(statusCause == "Exempt", tobool(1), tobool(0)), dynamic(null)))
+| extend statusChangeDate = tostring((
+        iff(type == "microsoft.security/assessments", todatetime(properties.status.statusChangeDate), dynamic(null))))
+| extend isSubAssessment = isnotempty((
+        iff(type == "microsoft.security/assessments", todynamic(properties.additionalData), dynamic(null)))['subAssessmentsLink'])
+| extend isPreview = ((
+        iff(type == "microsoft.security/assessments", iff(isnull(properties.metadata.preview), tobool(0), tobool(properties.metadata.preview)), dynamic(null))))
+| extend recommendationStatusTags = array_sort_asc(set_difference(pack_array(
+    iff(isPreview, "preview", ""),
+    iff(isnotempty(recommendationCategory) and recommendationCategory !~ "Unknown", "newVersion", ""),
+    iff(isSubAssessment, "setForDeprecation", "")
+), dynamic([""])))
+| extend connector = tolower((
+        iff(type == "microsoft.security/assessments", extract("(.*/providers/Microsoft.Security/security[Cc]onnectors/[^/]*)", 1, id), dynamic(null))))
+| extend awsAccount = (
+        iff(type == "microsoft.security/assessments", iff((type == "microsoft.security/assessments" and (source =~ "aws" and isnotempty(tostring(properties.resourceDetails.ConnectorId)))), connector, dynamic(null)), dynamic(null)))
+| extend gcpProject = (
+        iff(type == "microsoft.security/assessments", iff((type == "microsoft.security/assessments" and (source =~ "gcp" and isnotempty(tostring(properties.resourceDetails.ConnectorId)))), connector, dynamic(null)), dynamic(null)))
+| extend accountName = iff(isnotempty(awsAccount), awsAccount, iff(isnotempty(gcpProject), gcpProject, dynamic(null)))
+| extend maturityLevel = (
+        iff(type == "microsoft.security/assessments", case(
+            isnull(properties.metadata.preview), "GA",
+            tobool(properties.metadata.preview), "Preview",
+            "GA"), dynamic(null)))
+| project assessmentId, maturityLevel, statusChangeDate, isExempt, riskLevel, riskLevelText, isContextualRisk,
+          riskFactors, attackPaths, statusCode, displayName, resourceId, assessmentKey, resourceType,
+          resourceName, severity, assessmentTypeSkimmed, isSubAssessment, isPreview, recommendationCategory,
+          recommendationStatusTags
+| join kind=leftouter (
+    securityresources
+    | where type == 'microsoft.security/assessments/governanceassignments'
+    | extend assignedResourceId = tolower(tostring(properties.assignedResourceId))
+    | extend dueDate = todatetime(properties.remediationDueDate)
+    | extend owner = iff(isempty(tostring(properties.owner)), "unspecified", tostring(properties.owner))
+    | extend governanceStatus = case(
+        isnull(todatetime(properties.remediationDueDate)), "NoDueDate",
+        todatetime(properties.remediationDueDate) >= bin(now(), 1d), "OnTime",
+        "Overdue")
+    | project assignedResourceId, dueDate, owner, governanceStatus
+) on $left.assessmentId == $right.assignedResourceId
+| extend completionStatusNumber = case(
+    statusCode == "Healthy", 1,
+    governanceStatus == "Overdue", 5,
+    governanceStatus == "OnTime", 4,
+    statusCode == "Unhealthy", 3,
+    isExempt, 7, 1)
+| extend completionStatus = case(
+    completionStatusNumber == 5, "Overdue",
+    completionStatusNumber == 4, "OnTime",
+    completionStatusNumber == 3, "Unassigned",
+    completionStatusNumber == 7, "Exempted",
+    "Completed")
+| project-away assignedResourceId
+| extend riskFactorsLength = array_length(riskFactors)
+| extend dd = strcat(9-riskLevel, iff(riskFactors has_cs "Critical Resource", 0, 1), 9-riskFactorsLength, displayName)
+| sort by dd asc
+
+
+
+// Review Exemptions to MDFC Recommendation
+https://learn.microsoft.com/en-us/azure/defender-for-cloud/review-exemptions
+
+securityresources
+| where type == "microsoft.security/assessments"
+// Get recommendations in useful format
+| project
+['TenantID'] = tenantId,
+['SubscriptionID'] = subscriptionId,
+['AssessmentID'] = name,
+['DisplayName'] = properties.displayName,
+['ResourceType'] = tolower(split(properties.resourceDetails.Id,"/").[7]),
+['ResourceName'] = tolower(split(properties.resourceDetails.Id,"/").[8]),
+['ResourceGroup'] = resourceGroup,
+['ContainsNestedRecom'] = tostring(properties.additionalData.subAssessmentsLink),
+['StatusCode'] = properties.status.code,
+['StatusDescription'] = properties.status.description,
+['PolicyDefID'] = properties.metadata.policyDefinitionId,
+['Description'] = properties.metadata.description,
+['RecomType'] = properties.metadata.assessmentType,
+['Remediation'] = properties.metadata.remediationDescription,
+['Severity'] = properties.metadata.severity,
+['Link'] = properties.links.azurePortal
+| where StatusDescription contains "Exempt" 

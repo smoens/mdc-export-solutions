@@ -1,0 +1,84 @@
+# Dependencies
+node_modules/
+bower_components/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+bin/
+obj/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-workspace
+*.sublime-project
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.cache
+
+# Package manager locks (optional - remove if you want to track these)
+# package-lock.json
+# yarn.lock
+
+# Coverage reports
+coverage/
+.nyc_output/
+*.lcov
+
+# Solution export specific
+*.zip
+*.bak
+*.backup
+
+# Credentials / Secrets
+*.pfx
+*.cer
+*.key
+secrets/
+credentials/
