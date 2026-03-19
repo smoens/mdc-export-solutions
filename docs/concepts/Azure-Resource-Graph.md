@@ -3,9 +3,11 @@ title: Azure Resource Graph
 description: A cross-subscription query service that lets you explore Azure resources at scale using KQL - no streaming infrastructure required.
 ---
 
-# Azure Resource Graph
+# <img src="../assets/icons/resource-graph.svg" alt="" width="32"/> Azure Resource Graph
 
 **Azure Resource Graph** (ARG) is an Azure service that provides efficient, cross-subscription resource exploration. It uses Kusto Query Language (KQL) to query resource metadata and properties indexed by Azure Resource Manager.
+
+> Official docs: [Azure Resource Graph](https://learn.microsoft.com/en-us/azure/governance/resource-graph/)
 
 ## Why it matters
 

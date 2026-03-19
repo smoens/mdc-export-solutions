@@ -3,9 +3,11 @@ title: Azure SQL Database
 description: A fully managed relational database service that stores and queries the final, deduplicated Defender for Cloud findings.
 ---
 
-# Azure SQL Database
+# <img src="../assets/icons/sql-database.svg" alt="" width="32"/> Azure SQL Database
 
 **Azure SQL Database** is a fully managed relational database engine based on the latest stable version of Microsoft SQL Server. It handles patching, backups, high availability, and scaling automatically.
+
+> Official docs: [Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/)
 
 ## Why it matters
 

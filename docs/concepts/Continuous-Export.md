@@ -3,9 +3,11 @@ title: Continuous Export
 description: A Defender for Cloud feature that streams security findings to Event Hub or Log Analytics in near-real-time.
 ---
 
-# Continuous Export
+# <img src="../assets/icons/continuous-export.svg" alt="" width="32"/> Continuous Export
 
 **Continuous Export** is a Microsoft Defender for Cloud capability that automatically sends security assessment data (recommendations, alerts, and regulatory compliance changes) to an external destination as soon as they are generated.
+
+> Official docs: [Continuous export](https://learn.microsoft.com/en-us/azure/defender-for-cloud/continuous-export)
 
 ## Why it matters
 

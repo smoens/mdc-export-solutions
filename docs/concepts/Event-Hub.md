@@ -3,9 +3,11 @@ title: Event Hub
 description: A fully managed streaming ingestion service that buffers millions of events per second for downstream processing.
 ---
 
-# Event Hub
+# <img src="../assets/icons/event-hub.svg" alt="" width="32"/> Event Hub
 
 **Azure Event Hubs** is a big-data streaming platform and event ingestion service. It acts as the "front door" for an event pipeline, decoupling event producers from consumers.
+
+> Official docs: [Azure Event Hubs](https://learn.microsoft.com/en-us/azure/event-hubs/)
 
 ## Why it matters
 

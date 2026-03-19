@@ -3,9 +3,11 @@ title: Stream Analytics
 description: A real-time analytics service that processes streaming data from Event Hub and writes results to downstream stores like SQL.
 ---
 
-# Stream Analytics
+# <img src="../assets/icons/stream-analytics.svg" alt="" width="32"/> Stream Analytics
 
 **Azure Stream Analytics** (ASA) is a fully managed, real-time analytics service. It uses a SQL-like query language to read from streaming inputs, transform data on the fly, and write to one or more outputs.
+
+> Official docs: [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/)
 
 ## Why it matters
 
