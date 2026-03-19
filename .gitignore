@@ -85,3 +85,4 @@ credentials/
 
 # Local configuration
 .github/copilot-instructions.md
+.github/instructions/**

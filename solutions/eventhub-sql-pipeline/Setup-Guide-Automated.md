@@ -1,6 +1,8 @@
-# Option D — CE → Event Hub → Stream Analytics → Azure SQL
+# Setup Guide - Automated (Terraform + Bootstrap)
 
-Ingest Defender for Cloud findings from Event Hub into Azure SQL using a **staging → MERGE** pattern that handles deduplication, partition fan-out, and idempotent upserts.
+Deploy the Defender for Cloud **CE → Event Hub → Stream Analytics → Azure SQL** pipeline using Terraform for infrastructure and PowerShell bootstrap scripts for SQL schema.
+
+For the solution overview, see the [README](README.md). For a manual walkthrough (Portal + SQL), see [Setup-Guide-Manual.md](Setup-Guide-Manual.md).
 
 ---
 
@@ -141,7 +143,7 @@ For Terraform variable/output details and cost estimates, see [.infra/sql/README
 The bootstrap creates SQL schema, stored procedures, and MI permissions. Terraform does not manage SQL DDL — this is intentional.
 
 ```powershell
-cd option_d-CE-EH-ASA-SQL/bootstrap/scripts/
+cd solutions/eventhub-sql-pipeline/bootstrap/scripts/
 
 ./Initialize-Bootstrap.ps1 `
     -SqlServerFqdn          "defender-sql-server.database.windows.net" `
@@ -238,7 +240,7 @@ EXEC dbo.usp_MergeSecurityAssessments;
 EXEC dbo.usp_MergeSecuritySubAssessments;
 ```
 
-For a **manual deployment** (Portal + SQL, no Terraform), see [Setup-Guide-Manual.md](Setup-Guide-Manual.md).
+For a **manual deployment** (Portal + SQL, no Terraform), see [Setup-Guide-Manual.md](Setup-Guide-Manual.md). For the solution overview, see [README.md](README.md).
 
 ---
 

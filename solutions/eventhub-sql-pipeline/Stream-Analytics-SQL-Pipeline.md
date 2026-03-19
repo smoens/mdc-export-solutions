@@ -1,6 +1,6 @@
 # Stream Analytics → SQL Database Pipeline
 
-Deep-dive reference for the Defender for Cloud ingestion pipeline. For the deployment guide and schema reference, see [README.md](README.md).
+Deep-dive reference for the Defender for Cloud ingestion pipeline. For the deployment guide and schema reference, see [Setup-Guide-Automated.md](Setup-Guide-Automated.md).
 
 **TABLE OF CONTENTS**
 - [Continuous Export](#continuous-export)
@@ -373,4 +373,4 @@ a summary row into `dbo.MergeAudit` at the end of `usp_ProcessDefenderFindings`.
 | `sql/usp_MergeSecuritySubAssessments.sql` | Stored procedure: MERGE sub-assessments                  |
 | `sql/Setup-ElasticJobScheduler.sql`       | Elastic Job setup reference (bootstrap automates this)   |
 | `bootstrap/`                              | Automated SQL bootstrapping (PowerShell + SQL)           |
-| `README.md`                               | Deployment guide, schema reference, troubleshooting      |
+| `Setup-Guide-Automated.md`                | Deployment guide, schema reference, troubleshooting      |
