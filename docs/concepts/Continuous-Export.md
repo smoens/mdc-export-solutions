@@ -37,12 +37,12 @@ Without Continuous Export, Defender for Cloud findings live only inside the Azur
 3. Each finding is serialized as JSON and sent to the configured destination.
 4. Downstream consumers (Stream Analytics, Logic Apps, custom code) process the events.
 
-In this repository, the [streaming SQL pipeline](/streaming-sql-pipeline/) uses Continuous Export → Event Hub as the first step.
+In this repository, the [streaming SQL pipeline](/solutions/streaming-sql-pipeline/) uses Continuous Export → Event Hub as the first step.
 
 ## Related
 
 - [Event Hub](Event-Hub.md) - the streaming ingestion service that receives exported findings
 - [Stream Analytics](Stream-Analytics.md) - processes events from Event Hub in real time
 - [Azure SQL Database](Azure-SQL-Database.md) - stores the final, deduplicated findings
-- [Streaming SQL pipeline guide](/streaming-sql-pipeline/README.md) - full deployment walkthrough
+- [Streaming SQL pipeline guide](/solutions/streaming-sql-pipeline/README.md) - full deployment walkthrough
 - [Setup-ContinuousExport.ps1](/automation/Setup-ContinuousExport.ps1) - script to configure CE on subscriptions

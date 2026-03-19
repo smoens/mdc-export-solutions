@@ -59,5 +59,5 @@ Both jobs authenticate to Event Hub and SQL via **managed identity** - no connec
 - [Event Hub](Event-Hub.md) - the upstream streaming input for ASA
 - [Azure SQL Database](Azure-SQL-Database.md) - the downstream output where ASA writes raw events
 - [Continuous Export](Continuous-Export.md) - the original source of the events
-- [Stream Analytics deep-dive](/streaming-sql-pipeline/Stream-Analytics-SQL-Pipeline.md) - CE format, ASA queries, MERGE internals
-- [Streaming SQL pipeline guide](/streaming-sql-pipeline/README.md) - full deployment walkthrough
+- [Stream Analytics deep-dive](/solutions/streaming-sql-pipeline/Stream-Analytics-SQL-Pipeline.md) - CE format, ASA queries, MERGE internals
+- [Streaming SQL pipeline guide](/solutions/streaming-sql-pipeline/README.md) - full deployment walkthrough

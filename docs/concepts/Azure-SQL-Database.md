@@ -71,5 +71,5 @@ Key safeguards:
 - [Stream Analytics](Stream-Analytics.md) - writes raw events into the staging tables
 - [Event Hub](Event-Hub.md) - the upstream buffer that feeds Stream Analytics
 - [Continuous Export](Continuous-Export.md) - the original source of findings from Defender for Cloud
-- [Streaming SQL pipeline guide](/streaming-sql-pipeline/README.md) - full deployment walkthrough
-- [Bootstrap scripts](/streaming-sql-pipeline/bootstrap/README.md) - creates schema, stored procs, and Elastic Job schedule
+- [Streaming SQL pipeline guide](/solutions/streaming-sql-pipeline/README.md) - full deployment walkthrough
+- [Bootstrap scripts](/solutions/streaming-sql-pipeline/bootstrap/README.md) - creates schema, stored procs, and Elastic Job schedule

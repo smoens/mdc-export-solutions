@@ -1,4 +1,4 @@
-# mdc-export-solutions
+# Microsoft Defender for Cloud - Export Solutions
 
 Export and analyze **Microsoft Defender for Cloud** findings using multiple pipeline options.
 
@@ -25,16 +25,17 @@ New to the Azure services in this pipeline? Start here:
 │   ├── Setup-ContinuousExport.ps1 # Configure Continuous Export on subscriptions
 │   └── output/                    # Generated reports and Power BI setup scripts
 │
-├── streaming-sql-pipeline/        # Streaming: CE → Event Hub → Stream Analytics → SQL
-│   ├── README.md                  # Deployment guide, schema reference, troubleshooting
-│   ├── Setup-Guide-Manual.md      # Manual deployment walkthrough (Portal + SQL)
-│   ├── Stream-Analytics-SQL-Pipeline.md  # Deep-dive: CE format, ASA queries, MERGE internals
-│   └── bootstrap/                 # Automated SQL bootstrapping (PowerShell + SQL)
-│
-├── resource-graph-export/          # Point-in-time Azure Resource Graph queries
-│   ├── Export-ArgFindings.ps1      # ARG-based findings export
-│   ├── Export-ForPowerBI.ps1       # Power BI export (CSV & Log Analytics modes)
-│   └── resourcegraph.kql          # KQL queries for ARG
+├── solutions/
+│   ├── streaming-sql-pipeline/    # Streaming: CE → Event Hub → Stream Analytics → SQL
+│   │   ├── README.md              # Deployment guide, schema reference, troubleshooting
+│   │   ├── Setup-Guide-Manual.md  # Manual deployment walkthrough (Portal + SQL)
+│   │   ├── Stream-Analytics-SQL-Pipeline.md  # Deep-dive: CE format, ASA queries, MERGE internals
+│   │   └── bootstrap/             # Automated SQL bootstrapping (PowerShell + SQL)
+│   │
+│   └── resource-graph-export/     # Point-in-time Azure Resource Graph queries
+│       ├── Export-ArgFindings.ps1  # ARG-based findings export
+│       ├── Export-ForPowerBI.ps1   # Power BI export (CSV & Log Analytics modes)
+│       └── resourcegraph.kql      # KQL queries for ARG
 │
 └── .infra/
     └── sql/                        # Terraform for streaming pipeline infrastructure
@@ -49,8 +50,8 @@ New to the Azure services in this pipeline? Start here:
 
 | Solution | Path | Description |
 |----------|------|-------------|
-| **Streaming SQL Pipeline** | `streaming-sql-pipeline/` | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
-| **Resource Graph Export** | `resource-graph-export/` | Azure Resource Graph queries. Lightweight, no infrastructure needed. Point-in-time exports only (no streaming). |
+| **Streaming SQL Pipeline** | `solutions/streaming-sql-pipeline/` | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
+| **Resource Graph Export** | `solutions/resource-graph-export/` | Azure Resource Graph queries. Lightweight, no infrastructure needed. Point-in-time exports only (no streaming). |
 
 ## Quick Start - Streaming SQL Pipeline
 
@@ -61,7 +62,7 @@ cp terraform.tfvars.example terraform.tfvars   # edit with your values
 terraform init && terraform apply
 
 # 2. Run bootstrap (schema + permissions + Elastic Job schedule)
-cd ../../streaming-sql-pipeline/bootstrap/scripts/
+cd ../../solutions/streaming-sql-pipeline/bootstrap/scripts/
 ./Initialize-Bootstrap.ps1 \
     -SqlServerFqdn "$(terraform -chdir=../../../.infra/sql output -raw sql_server_fqdn)" \
     -ElasticJobUmiName "$(terraform -chdir=../../../.infra/sql output -raw elastic_job_umi_name)" \
@@ -73,4 +74,4 @@ cd ../../streaming-sql-pipeline/bootstrap/scripts/
 # 3. Done - bootstrap starts ASA jobs automatically
 ```
 
-See [streaming-sql-pipeline/README.md](streaming-sql-pipeline/README.md) for the full walkthrough.
+See [streaming-sql-pipeline/README.md](solutions/streaming-sql-pipeline/README.md) for the full walkthrough.

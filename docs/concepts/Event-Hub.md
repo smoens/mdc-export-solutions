@@ -52,4 +52,4 @@ Stream Analytics Job ×2
 - [Continuous Export](Continuous-Export.md) - the upstream producer that writes events to Event Hub
 - [Stream Analytics](Stream-Analytics.md) - the downstream consumer that reads and routes events to SQL
 - [Azure SQL Database](Azure-SQL-Database.md) - final destination for processed findings
-- [Streaming SQL pipeline guide](/streaming-sql-pipeline/README.md) - full deployment walkthrough
+- [Streaming SQL pipeline guide](/solutions/streaming-sql-pipeline/README.md) - full deployment walkthrough
