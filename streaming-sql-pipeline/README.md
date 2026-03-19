@@ -1,4 +1,4 @@
-# Option D — CE → Event Hub → Stream Analytics → Azure SQL
+# Streaming SQL Pipeline - CE → Event Hub → Stream Analytics → Azure SQL
 
 Ingest Defender for Cloud findings from Event Hub into Azure SQL using a **staging → MERGE** pattern that handles deduplication, partition fan-out, and idempotent upserts.
 
@@ -141,7 +141,7 @@ For Terraform variable/output details and cost estimates, see [.infra/sql/README
 The bootstrap creates SQL schema, stored procedures, and MI permissions. Terraform does not manage SQL DDL — this is intentional.
 
 ```powershell
-cd option_d-CE-EH-ASA-SQL/bootstrap/scripts/
+cd streaming-sql-pipeline/bootstrap/scripts/
 
 ./Initialize-Bootstrap.ps1 `
     -SqlServerFqdn          "defender-sql-server.database.windows.net" `

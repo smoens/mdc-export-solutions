@@ -145,7 +145,7 @@ Connect to the **Findings Database** (`DefenderVulnerability`) using an Entra-au
 If you have PowerShell 7+ and the `SqlServer` module:
 
 ```powershell
-cd option_d-CE-EH-ASA-SQL/bootstrap/scripts/
+cd streaming-sql-pipeline/bootstrap/scripts/
 
 # This creates tables, stored procedures, and permissions in one go
 ./Initialize-Bootstrap.ps1 `

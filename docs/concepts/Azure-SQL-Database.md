@@ -9,7 +9,7 @@ description: A fully managed relational database service that stores and queries
 
 ## Why it matters
 
-Azure SQL Database is the final destination in the Option D pipeline. It provides:
+Azure SQL Database is the final destination in the streaming pipeline. It provides:
 
 - **Structured storage** - findings are parsed from JSON into typed columns, enabling efficient queries and joins.
 - **Deduplication** - the MERGE pattern ensures each finding appears exactly once, updated with the latest state.
@@ -30,7 +30,7 @@ Azure SQL Database is the final destination in the Option D pipeline. It provide
 
 ## Staging → typed table pattern
 
-Option D uses a two-stage approach:
+The streaming pipeline uses a two-stage approach:
 
 | Stage | Table | Purpose |
 |-------|-------|---------|
@@ -71,5 +71,5 @@ Key safeguards:
 - [Stream Analytics](Stream-Analytics.md) - writes raw events into the staging tables
 - [Event Hub](Event-Hub.md) - the upstream buffer that feeds Stream Analytics
 - [Continuous Export](Continuous-Export.md) - the original source of findings from Defender for Cloud
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - full deployment walkthrough
-- [Bootstrap scripts](/option_d-CE-EH-ASA-SQL/bootstrap/README.md) - creates schema, stored procs, and Elastic Job schedule
+- [Streaming SQL pipeline guide](/streaming-sql-pipeline/README.md) - full deployment walkthrough
+- [Bootstrap scripts](/streaming-sql-pipeline/bootstrap/README.md) - creates schema, stored procs, and Elastic Job schedule

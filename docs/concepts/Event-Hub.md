@@ -22,15 +22,15 @@ In the Defender for Cloud export pipeline, Event Hub is the buffer between Conti
 |----------|-------|
 | **Service** | Azure Event Hubs |
 | **Protocol** | AMQP 1.0, HTTPS, Kafka |
-| **Partitions** | 2–32 per hub (Option D uses 2) |
+| **Partitions** | 2-32 per hub (streaming pipeline uses 2) |
 | **Retention** | 1–90 days (Basic/Standard), up to unlimited (Premium/Dedicated) |
 | **Throughput** | 1 MB/s in, 2 MB/s out per throughput unit (Standard tier) |
 | **Authentication** | Entra ID (managed identity), SAS - this repo uses Entra ID only |
 | **Pricing tier used** | Basic (~$11/month) |
 
-## Role in Option D
+## Role in the streaming pipeline
 
-Option D deploys **two Event Hubs** inside a single namespace:
+The streaming SQL pipeline deploys **two Event Hubs** inside a single namespace:
 
 | Hub | Purpose |
 |-----|---------|
@@ -52,4 +52,4 @@ Stream Analytics Job ×2
 - [Continuous Export](Continuous-Export.md) - the upstream producer that writes events to Event Hub
 - [Stream Analytics](Stream-Analytics.md) - the downstream consumer that reads and routes events to SQL
 - [Azure SQL Database](Azure-SQL-Database.md) - final destination for processed findings
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - full deployment walkthrough
+- [Streaming SQL pipeline guide](/streaming-sql-pipeline/README.md) - full deployment walkthrough

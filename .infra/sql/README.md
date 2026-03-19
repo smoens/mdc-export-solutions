@@ -1,8 +1,8 @@
-# Terraform — SQL Pipeline Infrastructure
+# Terraform - Streaming SQL Pipeline Infrastructure
 
-Terraform configuration for the **CE → Event Hub → Stream Analytics → Azure SQL** pipeline (Option D).
+Terraform configuration for the **CE → Event Hub → Stream Analytics → Azure SQL** streaming pipeline.
 
-For the full deployment guide, schema reference, and troubleshooting, see [option_d-CE-EH-ASA-SQL/README.md](../../option_d-CE-EH-ASA-SQL/README.md).
+For the full deployment guide, schema reference, and troubleshooting, see [streaming-sql-pipeline/README.md](../../streaming-sql-pipeline/README.md).
 
 ## What Terraform Creates
 
@@ -22,7 +22,7 @@ For the full deployment guide, schema reference, and troubleshooting, see [optio
 
 ## What Terraform Does NOT Create
 
-Handled by the **bootstrap scripts** (`option_d-CE-EH-ASA-SQL/bootstrap/`):
+Handled by the **bootstrap scripts** (`streaming-sql-pipeline/bootstrap/`):
 
 - SQL schema (raw tables, typed tables, indexes)
 - Stored procedures (`usp_MergeSecurityAssessments`, `usp_MergeSecuritySubAssessments`)
