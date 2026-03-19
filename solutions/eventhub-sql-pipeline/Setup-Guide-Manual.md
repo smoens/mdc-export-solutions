@@ -402,7 +402,7 @@ See the [Verification checklist](Setup-Guide-Automated.md#step-5--wait-for-data-
 | Issue | Detail |
 |-------|--------|
 | **CE delivers zero events** | Check that `disableLocalAuth` is `false` on the Event Hub namespace (for SAS mode), or that trusted service mode is configured with proper RBAC. |
-| **Job Metadata DB must be S0+** | Elastic Job Agent does not support serverless SKUs. Use Standard S0 ($15/mo). |
+| **Job Metadata DB must be S0+** | Elastic Job Agent does not support serverless SKUs. Use Standard S0. |
 | **ASA enrichment column differs** | Assessments use `assessmentEventDataEnrichment`, sub-assessments use `subAssessmentEventDataEnrichment`. Using the wrong column name causes ASA to error or drop data. |
 | **CE JSON is ARM format** | CE sends `properties.status.code`, not `RecommendationState`. The MERGE procs handle this transformation. Don't try to map CE fields directly to typed column names. |
 | **KQL property access is case-sensitive** | CE uses `resourceDetails.id` (lowercase `i`). The MERGE procs use `OPENJSON` with explicit paths. |

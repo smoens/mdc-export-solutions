@@ -30,7 +30,7 @@ The tradeoff: ARG gives you the **current state**, not a historical stream. If y
 | **Row limit** | 1,000 rows per page (use `$skipToken` for pagination) |
 | **Latency** | Seconds (resource index is near-real-time but not streaming) |
 | **Authentication** | Entra ID (Azure CLI, managed identity, service principal) |
-| **Cost** | Free (included with Azure subscription) |
+
 
 ## Streaming vs. point-in-time
 
@@ -39,7 +39,7 @@ The tradeoff: ARG gives you the **current state**, not a historical stream. If y
 | **Data freshness** | Near-real-time (minutes) | Point-in-time (current state) |
 | **History** | Full event history in SQL | No historical data |
 | **Infrastructure** | Event Hub + ASA + SQL | None |
-| **Cost** | ~$291–336/month | Free |
+
 | **Best for** | Dashboards, trend analysis, alerting | Ad-hoc queries, CSV exports, audits |
 
 ## Example query

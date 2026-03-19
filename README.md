@@ -8,13 +8,13 @@
 
 ## Why export Defender for Cloud data?
 
-Microsoft Defender for Cloud continuously evaluates your Azure resources against security recommendations, vulnerability scans, and compliance benchmarks. That data is powerful - but only if you can use it beyond the portal.
+Microsoft Defender for Cloud continuously evaluates your Azure resources against security recommendations, vulnerability scans, and compliance benchmarks. That data is powerful and can be enhanced if you can use it beyond the portal.
 
 - **See everything at once** - Query findings across all subscriptions in a single view instead of clicking through one subscription at a time
 - **Track trends over time** - Build a historical record to answer "are we getting healthier?" and produce compliance reports with actual trend lines
 - **Build custom dashboards** - Power BI, Grafana, or any BI tool connected to SQL - tailored for CISOs, platform teams, or app owners
 - **Automate responses** - Trigger workflows when posture changes - create tickets, send alerts, feed into SIEM/SOAR
-- **Own your data** - Control retention, indexing, and query performance at predictable cost instead of depending on Log Analytics limits
+- **Own your data** - Control retention, indexing, and query performance instead of depending on Log Analytics limits
 
 ---
 

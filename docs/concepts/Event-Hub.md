@@ -28,7 +28,7 @@ In the Defender for Cloud export pipeline, Event Hub is the buffer between Conti
 | **Retention** | 1–90 days (Basic/Standard), up to unlimited (Premium/Dedicated) |
 | **Throughput** | 1 MB/s in, 2 MB/s out per throughput unit (Standard tier) |
 | **Authentication** | Entra ID (managed identity), SAS - this repo uses Entra ID only |
-| **Pricing tier used** | Basic (~$11/month) |
+| **Pricing tier used** | Basic |
 
 ## Role in the streaming pipeline
 
