@@ -10,6 +10,7 @@ Icon SVG paths used in this repository's diagrams are derived from the
 
 | File | Service |
 |------|---------|
+| `azure-policy.svg` | Azure Policy |
 | `continuous-export.svg` | Microsoft Defender for Cloud (Continuous Export context) |
 | `defender-for-cloud.svg` | Microsoft Defender for Cloud |
 | `event-hub.svg` | Azure Event Hubs |

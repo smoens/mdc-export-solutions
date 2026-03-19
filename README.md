@@ -27,7 +27,7 @@ Microsoft Defender for Cloud continuously evaluates your Azure resources against
 | **Infrastructure** | Event Hub, SQL, Stream Analytics, Elastic Jobs | None - just run a script |
 | **Best for** | Dashboards, trend analysis, automated workflows | Ad-hoc reporting, quick audits, Power BI |
 | **Update frequency** | Real-time + weekly snapshots | On-demand |
-| **Multi-subscription** | Per-subscription CE setup | Single query across all subscriptions |
+| **Multi-subscription** | Per-subscription CE setup (automate via [Azure Policy](docs/concepts/Azure-Policy-Continuous-Export.md)) | Single query across all subscriptions |
 | **Get started** | [View solution →](solutions/eventhub-sql-pipeline/) | [View solution →](solutions/resource-graph-export/) |
 
 ---
@@ -102,6 +102,7 @@ New to the Azure services in this pipeline? Start here.
 | [Event Hub](docs/concepts/Event-Hub.md) | Buffers streaming events with partitioning and consumer groups |
 | [Stream Analytics](docs/concepts/Stream-Analytics.md) | Processes events in real time using SQL-like queries |
 | [Azure SQL Database](docs/concepts/Azure-SQL-Database.md) | Stores deduplicated findings in typed tables |
+| [Azure Policy (Continuous Export)](docs/concepts/Azure-Policy-Continuous-Export.md) | Deploys Continuous Export at scale across subscriptions using built-in policy |
 | [Azure Resource Graph](docs/concepts/Azure-Resource-Graph.md) | Cross-subscription KQL queries - zero infrastructure required |
 
 </details>

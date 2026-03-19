@@ -29,7 +29,7 @@ Without Continuous Export, Defender for Cloud findings live only inside the Azur
 | **Destinations** | Azure Event Hub, Log Analytics workspace |
 | **Data types** | Security assessments, sub-assessments, alerts, regulatory compliance |
 | **Latency** | Minutes (near-real-time) |
-| **Configuration** | Per-subscription; portal, CLI, Terraform, or Policy |
+| **Configuration** | Per-subscription; portal, CLI, Terraform, or [Azure Policy (recommended at scale)](Azure-Policy-Continuous-Export.md) |
 | **Cost** | No extra Defender charge; standard Event Hub / Log Analytics ingestion costs apply |
 
 ## How it works
@@ -43,6 +43,7 @@ In this repository, the [Event Hub SQL pipeline](/solutions/eventhub-sql-pipelin
 
 ## Related
 
+- [Azure Policy for Continuous Export](Azure-Policy-Continuous-Export.md) - deploy and enforce CE across all subscriptions at scale
 - [Event Hub](Event-Hub.md) - the streaming ingestion service that receives exported findings
 - [Stream Analytics](Stream-Analytics.md) - processes events from Event Hub in real time
 - [Azure SQL Database](Azure-SQL-Database.md) - stores the final, deduplicated findings

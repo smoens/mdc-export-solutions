@@ -19,6 +19,7 @@ Official icon SVGs are stored locally in `docs/assets/icons/`. Always use these 
 
 | File | Azure service |
 |------|---------------|
+| `azure-policy.svg` | Azure Policy |
 | `continuous-export.svg` | Microsoft Defender for Cloud (Continuous Export context) |
 | `defender-for-cloud.svg` | Microsoft Defender for Cloud |
 | `event-hub.svg` | Azure Event Hubs |
