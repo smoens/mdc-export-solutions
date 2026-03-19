@@ -2,19 +2,13 @@
 
 Point-in-time export of **Microsoft Defender for Cloud** findings using Azure Resource Graph queries. No infrastructure to deploy - just run the scripts.
 
+<p align="center">
+  <img src="../../docs/assets/images/flow-resource-graph-export.svg" alt="Resource Graph Export data flow" width="700"/>
+</p>
+
 ## How it works
 
 Azure Resource Graph lets you query security findings across all subscriptions using KQL. The scripts in this folder run those queries and export results to CSV for reporting or Power BI.
-
-```
-Azure Resource Graph
-    │  KQL query
-    ▼
-PowerShell script
-    │  Export
-    ▼
-CSV / Power BI
-```
 
 ## Key concepts
 

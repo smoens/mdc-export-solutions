@@ -2,22 +2,13 @@
 
 Real-time ingestion of **Microsoft Defender for Cloud** findings into Azure SQL Database using a staging-then-merge pattern.
 
+<p align="center">
+  <img src="../../docs/assets/images/flow-eventhub-sql-pipeline.svg" alt="Event Hub SQL Pipeline data flow" width="920"/>
+</p>
+
 ## How it works
 
 Continuous Export streams security assessments and sub-assessments to Event Hub. Stream Analytics writes events as-is into raw staging tables. An Elastic Job runs a MERGE stored procedure every 10 minutes to deduplicate, parse the ARM JSON, and upsert into typed tables.
-
-```
-Defender for Cloud
-    │  Continuous Export
-    ▼
-Event Hub (2 hubs)
-    │  Stream Analytics (passthrough)
-    ▼
-SQL _Raw staging tables
-    │  MERGE (Elastic Job, every 10 min)
-    ▼
-SQL typed tables
-```
 
 ## What gets deployed
 
