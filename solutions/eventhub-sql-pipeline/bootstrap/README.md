@@ -1,6 +1,6 @@
 # SQL Bootstrap Package
 
-Repeatable, idempotent bootstrap for initializing the SQL pipeline databases. For full deployment context, see [streaming-sql-pipeline/README.md](../README.md).
+Repeatable, idempotent bootstrap for initializing the SQL pipeline databases. For full deployment context, see [eventhub-sql-pipeline/README.md](../README.md).
 
 ## What It Creates
 

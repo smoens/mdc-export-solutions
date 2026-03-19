@@ -2,7 +2,7 @@
 
 Terraform configuration for the **CE → Event Hub → Stream Analytics → Azure SQL** streaming pipeline.
 
-For the full deployment guide, schema reference, and troubleshooting, see [streaming-sql-pipeline/README.md](../../solutions/streaming-sql-pipeline/README.md).
+For the full deployment guide, schema reference, and troubleshooting, see [eventhub-sql-pipeline/README.md](../../solutions/eventhub-sql-pipeline/README.md).
 
 ## What Terraform Creates
 
@@ -22,7 +22,7 @@ For the full deployment guide, schema reference, and troubleshooting, see [strea
 
 ## What Terraform Does NOT Create
 
-Handled by the **bootstrap scripts** (`solutions/streaming-sql-pipeline/bootstrap/`):
+Handled by the **bootstrap scripts** (`solutions/eventhub-sql-pipeline/bootstrap/`):
 
 - SQL schema (raw tables, typed tables, indexes)
 - Stored procedures (`usp_MergeSecurityAssessments`, `usp_MergeSecuritySubAssessments`)

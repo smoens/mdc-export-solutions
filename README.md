@@ -8,7 +8,7 @@ Export and analyze **Microsoft Defender for Cloud** findings using multiple pipe
 
 ---
 **TABLE OF CONTENTS**  
-**[Concepts](#concepts) | [Repository Structure](#repository-structure) | [Solutions](#solutions) |  [Quick Start - Streaming SQL Pipeline](#quick-start---streaming-sql-pipeline)**
+**[Concepts](#concepts) | [Repository Structure](#repository-structure) | [Solutions](#solutions) |  [Quick Start - Event Hub SQL Pipeline](#quick-start---event-hub-sql-pipeline)**
 
 
 ## Concepts
@@ -40,7 +40,7 @@ New to the Azure services in this pipeline? Start here:
 ├── docs/                                     # Concepts, guides, principles, and assets
 │
 └── solutions/
-    ├── streaming-sql-pipeline/               # CE → Event Hub → Stream Analytics → SQL
+    ├── eventhub-sql-pipeline/                # CE → Event Hub → Stream Analytics → SQL
     │   ├── README.md                         # Deployment guide, schema reference, troubleshooting
     │   ├── Setup-Guide-Manual.md             # Manual deployment walkthrough (Portal + SQL)
     │   ├── Stream-Analytics-SQL-Pipeline.md  # Deep-dive: CE format, ASA queries, MERGE internals
@@ -55,10 +55,10 @@ New to the Azure services in this pipeline? Start here:
 
 | Solution | Description |
 |----------|-------------|
-| [**Streaming SQL Pipeline**](solutions/streaming-sql-pipeline/) | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
+| [**Event Hub SQL Pipeline**](solutions/eventhub-sql-pipeline/) | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
 | [**Resource Graph Export**](solutions/resource-graph-export/) | Azure Resource Graph queries. Lightweight, no infrastructure needed. Point-in-time exports only (no streaming). |
 
-## Quick Start - Streaming SQL Pipeline
+## Quick Start - Event Hub SQL Pipeline
 
 ```bash
 # 1. Deploy infrastructure
@@ -67,7 +67,7 @@ cp terraform.tfvars.example terraform.tfvars   # edit with your values
 terraform init && terraform apply
 
 # 2. Run bootstrap (schema + permissions + Elastic Job schedule)
-cd ../../solutions/streaming-sql-pipeline/bootstrap/scripts/
+cd ../../solutions/eventhub-sql-pipeline/bootstrap/scripts/
 ./Initialize-Bootstrap.ps1 \
     -SqlServerFqdn "$(terraform -chdir=../../../.infra/sql output -raw sql_server_fqdn)" \
     -ElasticJobUmiName "$(terraform -chdir=../../../.infra/sql output -raw elastic_job_umi_name)" \
@@ -79,4 +79,4 @@ cd ../../solutions/streaming-sql-pipeline/bootstrap/scripts/
 # 3. Done - bootstrap starts ASA jobs automatically
 ```
 
-See [streaming-sql-pipeline/README.md](solutions/streaming-sql-pipeline/README.md) for the full walkthrough.
+See [eventhub-sql-pipeline/README.md](solutions/eventhub-sql-pipeline/README.md) for the full walkthrough.

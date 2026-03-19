@@ -16,7 +16,7 @@ Azure Resource Graph is the simplest way to get Defender for Cloud findings out 
 - **KQL power** - filter, join, summarize, and project results using a familiar query language.
 - **Point-in-time snapshots** - get the current state of all findings right now.
 
-The tradeoff: ARG gives you the **current state**, not a historical stream. If you need trend analysis or real-time alerting, use the [streaming SQL pipeline](/solutions/streaming-sql-pipeline/) instead.
+The tradeoff: ARG gives you the **current state**, not a historical stream. If you need trend analysis or real-time alerting, use the [Event Hub SQL pipeline](/solutions/eventhub-sql-pipeline/) instead.
 
 ## Key details
 
@@ -71,4 +71,4 @@ do {
 - [Continuous Export](Continuous-Export.md) - the streaming alternative through Defender for Cloud
 - [Event Hub](Event-Hub.md) - used in the streaming pipeline but not needed for ARG
 - [Resource Graph export scripts](/solutions/resource-graph-export/) - ARG export scripts and KQL queries
-- [Streaming SQL pipeline guide](/solutions/streaming-sql-pipeline/README.md) - the full streaming alternative
+- [Event Hub SQL pipeline guide](/solutions/eventhub-sql-pipeline/README.md) - the full streaming alternative

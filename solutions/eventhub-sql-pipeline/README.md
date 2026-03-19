@@ -141,7 +141,7 @@ For Terraform variable/output details and cost estimates, see [.infra/sql/README
 The bootstrap creates SQL schema, stored procedures, and MI permissions. Terraform does not manage SQL DDL — this is intentional.
 
 ```powershell
-cd solutions/streaming-sql-pipeline/bootstrap/scripts/
+cd solutions/eventhub-sql-pipeline/bootstrap/scripts/
 
 ./Initialize-Bootstrap.ps1 `
     -SqlServerFqdn          "defender-sql-server.database.windows.net" `
