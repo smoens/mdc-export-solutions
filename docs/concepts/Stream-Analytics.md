@@ -28,7 +28,6 @@ Stream Analytics sits between Event Hub and Azure SQL Database in the streaming 
 | **Output sinks** | SQL Database, Blob Storage, Power BI, Cosmos DB, and more |
 | **Processing model** | Event-at-a-time or windowed (tumbling, hopping, sliding, session) |
 | **Scaling unit** | Streaming Unit (SU) - 1 SU = blended measure of CPU, memory, throughput |
-| **Pricing** | ~$80/month per SU (streaming pipeline uses 2 jobs x 1 SU = ~$160/month) |
 | **Authentication** | Managed identity (Entra ID) for both input and output |
 
 ## Passthrough vs. transform

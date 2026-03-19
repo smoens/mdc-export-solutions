@@ -135,7 +135,7 @@ terraform output asa_assessments_principal_id
 terraform output asa_subassessments_principal_id
 ```
 
-For Terraform variable/output details and cost estimates, see [.infra/sql/README.md](../.infra/sql/README.md).
+For Terraform variable/output details, see [.infra/sql/README.md](../.infra/sql/README.md).
 
 
 ### Step 2 — Run Bootstrap Scripts
@@ -705,7 +705,7 @@ The Elastic Job runs every 10 minutes by default. To change:
 |---|---|
 | Every 5 min | Near-real-time dashboards |
 | Every 15 min | Standard operational reporting |
-| Every 1 hour | Cost-conscious, batch reporting |
+| Every 1 hour | Batch reporting |
 
 For alternative scheduling options (ADF, Azure Functions, SQL Agent), see [Stream-Analytics-SQL-Pipeline.md](Stream-Analytics-SQL-Pipeline.md#alternative-scheduling-options).
 
@@ -736,7 +736,7 @@ For alternative scheduling options (ADF, Azure Functions, SQL Agent), see [Strea
 
 ## Related Documentation
 
-- [.infra/sql/README.md](../.infra/sql/README.md) — Terraform variables, outputs, cost estimates
+- [.infra/sql/README.md](../.infra/sql/README.md) — Terraform variables, outputs
 - [Stream-Analytics-SQL-Pipeline.md](Stream-Analytics-SQL-Pipeline.md) — CE details, ASA query syntax, MERGE process deep-dive, alternative scheduling
 - [Setup-Guide-Manual.md](Setup-Guide-Manual.md) — Portal-based manual deployment walkthrough
 - [bootstrap/README.md](bootstrap/README.md) — Bootstrap script parameter reference

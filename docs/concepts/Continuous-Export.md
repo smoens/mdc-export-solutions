@@ -30,7 +30,7 @@ Without Continuous Export, Defender for Cloud findings live only inside the Azur
 | **Data types** | Security assessments, sub-assessments, alerts, regulatory compliance |
 | **Latency** | Minutes (near-real-time) |
 | **Configuration** | Per-subscription; portal, CLI, Terraform, or [Azure Policy (recommended at scale)](Azure-Policy-Continuous-Export.md) |
-| **Cost** | No extra Defender charge; standard Event Hub / Log Analytics ingestion costs apply |
+
 
 ## How it works
 

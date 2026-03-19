@@ -29,21 +29,6 @@ Handled by the **bootstrap scripts** (`solutions/eventhub-sql-pipeline/bootstrap
 - SQL permissions (ASA MI users, Elastic Job UMI permissions)
 - Elastic Job target group, job, and steps
 
-## Estimated Monthly Cost
-
-| Resource | SKU | Est. Cost |
-|----------|-----|-----------|
-| Event Hub Namespace | Basic | ~$11 |
-| SQL Server (Findings) | GP_S_Gen5_2 (serverless) | ~$5–50 (auto-pause) |
-| SQL Server (Job Metadata) | S0 | ~$15 |
-| Stream Analytics × 2 | 1 SU each | ~$160 |
-| Elastic Job Agent | — | ~$100 |
-| User-Assigned MI | — | Free |
-| CE Automations | — | Free |
-| **Total** | | **~$291–336/mo** |
-
-> Stream Analytics is the largest cost driver. Consider stopping ASA jobs during periods of no expected data flow.
-
 ## File Structure
 
 ```

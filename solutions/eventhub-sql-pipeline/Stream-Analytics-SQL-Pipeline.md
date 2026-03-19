@@ -247,15 +247,13 @@ Activity: Web / Logic App (on failure — send alert)
 
 **Pros**: Rich monitoring, retry policies, integration with Azure Monitor alerts,
 reuse if ADF is already present.  
-**Cons**: Additional service overhead if not already deployed; ADF Integration Runtime
-has a base cost.
+**Cons**: Additional service overhead if not already deployed.
 
 ---
 
 #### Alternative 2 — Azure Functions Timer Trigger (lightweight / code-driven)
 
 A small Azure Function on a Consumption plan calls the stored procedure on a timer.
-Near-zero base cost.
 
 ```csharp
 [FunctionName("ProcessDefenderFindings")]
@@ -354,7 +352,7 @@ a summary row into `dbo.MergeAudit` at the end of `usp_ProcessDefenderFindings`.
 | Concern                | Recommendation                                                           |
 |------------------------|--------------------------------------------------------------------------|
 | Scheduling engine      | **Elastic Jobs** (implemented — bootstrap creates schedule automatically) |
-| Low-cost / no-frills   | Azure Functions timer trigger on Consumption plan                        |
+| Lightweight / no-frills| Azure Functions timer trigger on Consumption plan                        |
 | Complex orchestration  | ADF if already deployed                                                  |
 | MERGE frequency        | Every 15 min for standard reporting; every 5 min for near-real-time      |
 | Raw table retention    | TRUNCATE after each successful MERGE                                     |
