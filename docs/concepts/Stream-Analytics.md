@@ -11,10 +11,10 @@ description: A real-time analytics service that processes streaming data from Ev
 
 Stream Analytics sits between Event Hub and Azure SQL Database in the Option D pipeline. It provides:
 
-- **Real-time processing** — events are processed as they arrive, not in batch.
-- **No infrastructure management** — fully managed PaaS; no VMs, no clusters.
-- **SQL-like queries** — familiar syntax for filtering, projecting, and windowing.
-- **Exactly-once delivery** — when writing to SQL, ASA guarantees no duplicates at the output level.
+- **Real-time processing** - events are processed as they arrive, not in batch.
+- **No infrastructure management** - fully managed PaaS; no VMs, no clusters.
+- **SQL-like queries** - familiar syntax for filtering, projecting, and windowing.
+- **Exactly-once delivery** - when writing to SQL, ASA guarantees no duplicates at the output level.
 
 ## Key details
 
@@ -25,13 +25,13 @@ Stream Analytics sits between Event Hub and Azure SQL Database in the Option D p
 | **Input sources** | Event Hub, IoT Hub, Blob Storage |
 | **Output sinks** | SQL Database, Blob Storage, Power BI, Cosmos DB, and more |
 | **Processing model** | Event-at-a-time or windowed (tumbling, hopping, sliding, session) |
-| **Scaling unit** | Streaming Unit (SU) — 1 SU = blended measure of CPU, memory, throughput |
+| **Scaling unit** | Streaming Unit (SU) - 1 SU = blended measure of CPU, memory, throughput |
 | **Pricing** | ~$80/month per SU (Option D uses 2 jobs × 1 SU = ~$160/month) |
 | **Authentication** | Managed identity (Entra ID) for both input and output |
 
 ## Passthrough vs. transform
 
-Option D uses **passthrough queries** — the ASA jobs simply read the full JSON event from Event Hub and write it as-is into `_Raw` staging tables in SQL:
+Option D uses **passthrough queries** - the ASA jobs simply read the full JSON event from Event Hub and write it as-is into `_Raw` staging tables in SQL:
 
 ```sql
 SELECT *
@@ -52,12 +52,12 @@ The actual transformation (JSON parsing, deduplication, MERGE) happens downstrea
 | `asa-defender-assessments` | Event Hub `assessments` | `SecurityAssessments_Raw` table |
 | `asa-defender-subassessments` | Event Hub `subassessments` | `SecuritySubAssessments_Raw` table |
 
-Both jobs authenticate to Event Hub and SQL via **managed identity** — no connection strings or passwords.
+Both jobs authenticate to Event Hub and SQL via **managed identity** - no connection strings or passwords.
 
 ## Related
 
-- [Event Hub](Event-Hub.md) — the upstream streaming input for ASA
-- [Azure SQL Database](Azure-SQL-Database.md) — the downstream output where ASA writes raw events
-- [Continuous Export](Continuous-Export.md) — the original source of the events
-- [Stream Analytics deep-dive](/option_d-CE-EH-ASA-SQL/Stream-Analytics-SQL-Pipeline.md) — CE format, ASA queries, MERGE internals
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) — full deployment walkthrough
+- [Event Hub](Event-Hub.md) - the upstream streaming input for ASA
+- [Azure SQL Database](Azure-SQL-Database.md) - the downstream output where ASA writes raw events
+- [Continuous Export](Continuous-Export.md) - the original source of the events
+- [Stream Analytics deep-dive](/option_d-CE-EH-ASA-SQL/Stream-Analytics-SQL-Pipeline.md) - CE format, ASA queries, MERGE internals
+- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - full deployment walkthrough

@@ -11,10 +11,10 @@ description: A fully managed relational database service that stores and queries
 
 Azure SQL Database is the final destination in the Option D pipeline. It provides:
 
-- **Structured storage** — findings are parsed from JSON into typed columns, enabling efficient queries and joins.
-- **Deduplication** — the MERGE pattern ensures each finding appears exactly once, updated with the latest state.
-- **Power BI integration** — direct SQL connectivity makes it simple to build dashboards and reports.
-- **Serverless tier** — auto-pause and per-second billing keep costs low during quiet periods.
+- **Structured storage** - findings are parsed from JSON into typed columns, enabling efficient queries and joins.
+- **Deduplication** - the MERGE pattern ensures each finding appears exactly once, updated with the latest state.
+- **Power BI integration** - direct SQL connectivity makes it simple to build dashboards and reports.
+- **Serverless tier** - auto-pause and per-second billing keep costs low during quiet periods.
 
 ## Key details
 
@@ -24,7 +24,7 @@ Azure SQL Database is the final destination in the Option D pipeline. It provide
 | **Compute tier** | General Purpose Serverless (GP_S_Gen5_2) for findings DB |
 | **Auto-pause** | After 60 minutes of inactivity |
 | **Max vCores** | 2 (scales down to 0.5) |
-| **Authentication** | Entra ID only — no SQL authentication |
+| **Authentication** | Entra ID only - no SQL authentication |
 | **Estimated cost** | ~$5–50/month depending on activity |
 | **Job metadata DB** | Separate S0 database (~$15/month) for Elastic Job Agent |
 
@@ -64,12 +64,12 @@ WHEN NOT MATCHED
 Key safeguards:
 - **Deduplication** via `ROW_NUMBER()` keeps only the latest event per finding ID.
 - **Timestamp guard** (`EventEnqueuedUtcTime >= LastEnqueuedUtcTime`) prevents stale events from overwriting newer data.
-- **`OPENJSON ... WITH`** extracts ARM resource fields — no string manipulation.
+- **`OPENJSON ... WITH`** extracts ARM resource fields - no string manipulation.
 
 ## Related
 
-- [Stream Analytics](Stream-Analytics.md) — writes raw events into the staging tables
-- [Event Hub](Event-Hub.md) — the upstream buffer that feeds Stream Analytics
-- [Continuous Export](Continuous-Export.md) — the original source of findings from Defender for Cloud
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) — full deployment walkthrough
-- [Bootstrap scripts](/option_d-CE-EH-ASA-SQL/bootstrap/README.md) — creates schema, stored procs, and Elastic Job schedule
+- [Stream Analytics](Stream-Analytics.md) - writes raw events into the staging tables
+- [Event Hub](Event-Hub.md) - the upstream buffer that feeds Stream Analytics
+- [Continuous Export](Continuous-Export.md) - the original source of findings from Defender for Cloud
+- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - full deployment walkthrough
+- [Bootstrap scripts](/option_d-CE-EH-ASA-SQL/bootstrap/README.md) - creates schema, stored procs, and Elastic Job schedule

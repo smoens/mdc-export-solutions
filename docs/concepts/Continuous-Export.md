@@ -5,15 +5,15 @@ description: A Defender for Cloud feature that streams security findings to Even
 
 # Continuous Export
 
-**Continuous Export** is a Microsoft Defender for Cloud capability that automatically sends security assessment data — recommendations, alerts, and regulatory compliance changes — to an external destination as soon as they are generated.
+**Continuous Export** is a Microsoft Defender for Cloud capability that automatically sends security assessment data (recommendations, alerts, and regulatory compliance changes) to an external destination as soon as they are generated.
 
 ## Why it matters
 
 Without Continuous Export, Defender for Cloud findings live only inside the Azure portal. Enabling it unlocks:
 
-- **Near-real-time streaming** — findings arrive within minutes, not hours.
-- **Custom pipelines** — route data to Event Hub, Log Analytics, or both, then transform and store it however you need.
-- **Cross-subscription visibility** — aggregate findings from many subscriptions into a single downstream store.
+- **Near-real-time streaming** - findings arrive within minutes, not hours.
+- **Custom pipelines** - route data to Event Hub, Log Analytics, or both, then transform and store it however you need.
+- **Cross-subscription visibility** - aggregate findings from many subscriptions into a single downstream store.
 
 <p align="center">
   <img src="../assets/images/flow-defender-to-ce.svg" alt="Defender for Cloud streaming findings via Continuous Export" width="600"/>
@@ -41,8 +41,8 @@ In this repository, **Option D** uses Continuous Export → Event Hub as the fir
 
 ## Related
 
-- [Event Hub](Event-Hub.md) — the streaming ingestion service that receives exported findings
-- [Stream Analytics](Stream-Analytics.md) — processes events from Event Hub in real time
-- [Azure SQL Database](Azure-SQL-Database.md) — stores the final, deduplicated findings
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) — full deployment walkthrough
-- [Setup-ContinuousExport.ps1](/automation/Setup-ContinuousExport.ps1) — script to configure CE on subscriptions
+- [Event Hub](Event-Hub.md) - the streaming ingestion service that receives exported findings
+- [Stream Analytics](Stream-Analytics.md) - processes events from Event Hub in real time
+- [Azure SQL Database](Azure-SQL-Database.md) - stores the final, deduplicated findings
+- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - full deployment walkthrough
+- [Setup-ContinuousExport.ps1](/automation/Setup-ContinuousExport.ps1) - script to configure CE on subscriptions

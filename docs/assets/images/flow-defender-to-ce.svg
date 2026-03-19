@@ -20,7 +20,7 @@
   <rect width="800" height="220" rx="12" fill="#f9fafb"/>
 
   <!-- ════════════════════════════════════════════════════════════════
-       LEFT ICON — Microsoft Defender for Cloud (shield)
+       LEFT ICON - Microsoft Defender for Cloud (shield)
        Based on Azure Security Center icon silhouette
        ════════════════════════════════════════════════════════════════ -->
   <g transform="translate(100, 50)" filter="url(#shadow)">
@@ -63,7 +63,7 @@
   </circle>
 
   <!-- ════════════════════════════════════════════════════════════════
-       RIGHT ICON — Continuous Export (cloud + upload arrow)
+       RIGHT ICON - Continuous Export (cloud + upload arrow)
        ════════════════════════════════════════════════════════════════ -->
   <g transform="translate(470, 50)" filter="url(#shadow)">
     <!-- Cloud shape -->

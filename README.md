@@ -16,7 +16,7 @@ New to the Azure services in this pipeline? Start here:
 | [Event Hub](docs/concepts/Event-Hub.md) | Buffers streaming events with partitioning and consumer groups |
 | [Stream Analytics](docs/concepts/Stream-Analytics.md) | Processes events in real time using SQL-like queries |
 | [Azure SQL Database](docs/concepts/Azure-SQL-Database.md) | Stores deduplicated findings in typed tables |
-| [Azure Resource Graph](docs/concepts/Azure-Resource-Graph.md) | Cross-subscription KQL queries — zero infrastructure required |
+| [Azure Resource Graph](docs/concepts/Azure-Resource-Graph.md) | Cross-subscription KQL queries - zero infrastructure required |
 
 ## Repository Structure
 
@@ -53,7 +53,7 @@ New to the Azure services in this pipeline? Start here:
 | **D** | `option_d-CE-EH-ASA-SQL/` | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
 | **E** | `option_e-ARG/` | Azure Resource Graph queries. Lightweight, no infrastructure needed. Point-in-time exports only (no streaming). |
 
-## Quick Start — Option D (SQL Pipeline)
+## Quick Start - Option D (SQL Pipeline)
 
 ```bash
 # 1. Deploy infrastructure
@@ -71,7 +71,7 @@ cd ../../option_d-CE-EH-ASA-SQL/bootstrap/scripts/
     -AsaSubAssessmentsPrincipalName "asa-defender-subassessments" \
     -SkipDatabaseCreation -SkipMasterUser
 
-# 3. Done — bootstrap starts ASA jobs automatically
+# 3. Done - bootstrap starts ASA jobs automatically
 ```
 
 See [option_d-CE-EH-ASA-SQL/README.md](option_d-CE-EH-ASA-SQL/README.md) for the full walkthrough.

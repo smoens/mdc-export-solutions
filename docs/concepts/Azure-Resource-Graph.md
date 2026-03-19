@@ -1,6 +1,6 @@
 ---
 title: Azure Resource Graph
-description: A cross-subscription query service that lets you explore Azure resources at scale using KQL — no streaming infrastructure required.
+description: A cross-subscription query service that lets you explore Azure resources at scale using KQL - no streaming infrastructure required.
 ---
 
 # Azure Resource Graph
@@ -9,12 +9,12 @@ description: A cross-subscription query service that lets you explore Azure reso
 
 ## Why it matters
 
-Azure Resource Graph is the simplest way to get Defender for Cloud findings out of Azure — no Event Hub, no Stream Analytics, no SQL. It provides:
+Azure Resource Graph is the simplest way to get Defender for Cloud findings out of Azure - no Event Hub, no Stream Analytics, no SQL. It provides:
 
-- **Zero infrastructure** — nothing to deploy; just run a query.
-- **Cross-subscription** — query findings across all subscriptions you have access to in a single call.
-- **KQL power** — filter, join, summarize, and project results using a familiar query language.
-- **Point-in-time snapshots** — get the current state of all findings right now.
+- **Zero infrastructure** - nothing to deploy; just run a query.
+- **Cross-subscription** - query findings across all subscriptions you have access to in a single call.
+- **KQL power** - filter, join, summarize, and project results using a familiar query language.
+- **Point-in-time snapshots** - get the current state of all findings right now.
 
 The tradeoff: ARG gives you the **current state**, not a historical stream. If you need trend analysis or real-time alerting, use the streaming pipeline (Option D) instead.
 
@@ -68,7 +68,7 @@ do {
 
 ## Related
 
-- [Continuous Export](Continuous-Export.md) — the streaming alternative through Defender for Cloud
-- [Event Hub](Event-Hub.md) — used in the streaming pipeline but not needed for ARG
-- [Option E scripts](/option_e-ARG/) — ARG export scripts and KQL queries
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) — the full streaming alternative
+- [Continuous Export](Continuous-Export.md) - the streaming alternative through Defender for Cloud
+- [Event Hub](Event-Hub.md) - used in the streaming pipeline but not needed for ARG
+- [Option E scripts](/option_e-ARG/) - ARG export scripts and KQL queries
+- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - the full streaming alternative

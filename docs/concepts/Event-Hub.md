@@ -11,10 +11,10 @@ description: A fully managed streaming ingestion service that buffers millions o
 
 In the Defender for Cloud export pipeline, Event Hub is the buffer between Continuous Export and Stream Analytics. It provides:
 
-- **Decoupling** — Defender writes events independently of how fast (or slow) the consumer processes them.
-- **Partitioning** — events are distributed across partitions for parallel processing.
-- **Durability** — events are retained for a configurable period (1–90 days), so consumers can replay if needed.
-- **Multiple consumers** — different consumer groups can read the same stream independently.
+- **Decoupling** - Defender writes events independently of how fast (or slow) the consumer processes them.
+- **Partitioning** - events are distributed across partitions for parallel processing.
+- **Durability** - events are retained for a configurable period (1-90 days), so consumers can replay if needed.
+- **Multiple consumers** - different consumer groups can read the same stream independently.
 
 ## Key details
 
@@ -25,7 +25,7 @@ In the Defender for Cloud export pipeline, Event Hub is the buffer between Conti
 | **Partitions** | 2–32 per hub (Option D uses 2) |
 | **Retention** | 1–90 days (Basic/Standard), up to unlimited (Premium/Dedicated) |
 | **Throughput** | 1 MB/s in, 2 MB/s out per throughput unit (Standard tier) |
-| **Authentication** | Entra ID (managed identity), SAS — this repo uses Entra ID only |
+| **Authentication** | Entra ID (managed identity), SAS - this repo uses Entra ID only |
 | **Pricing tier used** | Basic (~$11/month) |
 
 ## Role in Option D
@@ -49,7 +49,7 @@ Stream Analytics Job ×2
 
 ## Related
 
-- [Continuous Export](Continuous-Export.md) — the upstream producer that writes events to Event Hub
-- [Stream Analytics](Stream-Analytics.md) — the downstream consumer that reads and routes events to SQL
-- [Azure SQL Database](Azure-SQL-Database.md) — final destination for processed findings
-- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) — full deployment walkthrough
+- [Continuous Export](Continuous-Export.md) - the upstream producer that writes events to Event Hub
+- [Stream Analytics](Stream-Analytics.md) - the downstream consumer that reads and routes events to SQL
+- [Azure SQL Database](Azure-SQL-Database.md) - final destination for processed findings
+- [Option D pipeline guide](/option_d-CE-EH-ASA-SQL/README.md) - full deployment walkthrough
