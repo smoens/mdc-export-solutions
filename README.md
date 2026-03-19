@@ -2,6 +2,22 @@
 
 Export and analyze **Microsoft Defender for Cloud** findings using multiple pipeline options.
 
+<p align="center">
+  <img src="docs/assets/images/flow-defender-to-ce.svg" alt="Defender for Cloud → Continuous Export data flow" width="600"/>
+</p>
+
+## Concepts
+
+New to the Azure services in this pipeline? Start here:
+
+| Concept | What it does |
+|---------|-------------|
+| [Continuous Export](docs/concepts/Continuous-Export.md) | Streams Defender findings to Event Hub or Log Analytics in near-real-time |
+| [Event Hub](docs/concepts/Event-Hub.md) | Buffers streaming events with partitioning and consumer groups |
+| [Stream Analytics](docs/concepts/Stream-Analytics.md) | Processes events in real time using SQL-like queries |
+| [Azure SQL Database](docs/concepts/Azure-SQL-Database.md) | Stores deduplicated findings in typed tables |
+| [Azure Resource Graph](docs/concepts/Azure-Resource-Graph.md) | Cross-subscription KQL queries — zero infrastructure required |
+
 ## Repository Structure
 
 ```
