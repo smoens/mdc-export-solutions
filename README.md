@@ -6,6 +6,11 @@ Export and analyze **Microsoft Defender for Cloud** findings using multiple pipe
   <img src="docs/assets/images/flow-defender-to-ce.svg" alt="Defender for Cloud → Continuous Export data flow" width="600"/>
 </p>
 
+---
+**TABLE OF CONTENTS**  
+**[Concepts](#concepts) | [Repository Structure](#repository-structure) | [Solutions](#solutions) |  [Quick Start - Streaming SQL Pipeline](#quick-start---streaming-sql-pipeline)**
+
+
 ## Concepts
 
 New to the Azure services in this pipeline? Start here:
