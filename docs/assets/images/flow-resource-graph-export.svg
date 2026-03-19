@@ -11,6 +11,11 @@
       </feMerge>
     </filter>
     <path id="connector-full" d="M 170 110 C 220 110, 260 110, 310 110 L 410 110 C 450 110, 480 110, 520 110" fill="none"/>
+    <!-- Mask to hide dots behind intermediate icon -->
+    <mask id="dot-mask">
+      <rect width="700" height="220" fill="white"/>
+      <rect x="285" y="42" width="100" height="100" rx="14" fill="black"/>
+    </mask>
   </defs>
 
   <!-- Background -->
@@ -90,18 +95,20 @@
   <text x="555" y="205" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" fill="#666">reports &amp; dashboards</text>
 
   <!-- ═══════ ANIMATED DATA DOTS ═══════ -->
-  <circle r="5" fill="#0078D4" filter="url(#glow)">
-    <animateMotion dur="2.8s" repeatCount="indefinite">
-      <mpath href="#connector-full"/>
-    </animateMotion>
-    <animate attributeName="opacity" values="0;1;1;1;0" dur="2.8s" repeatCount="indefinite"/>
-  </circle>
-  <circle r="3.5" fill="#50a0e6" filter="url(#glow)">
-    <animateMotion dur="2.8s" repeatCount="indefinite" begin="1.4s">
-      <mpath href="#connector-full"/>
-    </animateMotion>
-    <animate attributeName="opacity" values="0;0.8;0.8;0.8;0" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
-  </circle>
+  <g mask="url(#dot-mask)">
+    <circle r="5" fill="#0078D4" filter="url(#glow)">
+      <animateMotion dur="2.8s" repeatCount="indefinite">
+        <mpath href="#connector-full"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0;1;1;1;0" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.5" fill="#50a0e6" filter="url(#glow)">
+      <animateMotion dur="2.8s" repeatCount="indefinite" begin="1.4s">
+        <mpath href="#connector-full"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0;0.8;0.8;0.8;0" dur="2.8s" repeatCount="indefinite" begin="1.4s"/>
+    </circle>
+  </g>
 
   <!-- Title -->
   <text x="690" y="22" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="11" fill="#999" font-style="italic">Resource Graph Export</text>
