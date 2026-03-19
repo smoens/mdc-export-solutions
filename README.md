@@ -26,37 +26,37 @@ New to the Azure services in this pipeline? Start here:
 ## Repository Structure
 
 ```
-├── automation/                     # Standalone analysis & export scripts
-│   ├── Setup-ContinuousExport.ps1 # Configure Continuous Export on subscriptions
-│   └── output/                    # Generated reports and Power BI setup scripts
+├── .infra/
+│   └── sql/                                  # Terraform for streaming pipeline infrastructure
+│       ├── main.tf                           # All resources (~15 resource types)
+│       ├── variables.tf                      # Input variables with defaults
+│       ├── outputs.tf                        # Resource IDs, FQDNs, pipeline summary
+│       ├── providers.tf                      # azurerm ~4.0 + azapi providers
+│       └── terraform.tfvars.example          # Example variable values (copy to terraform.tfvars)
 │
-├── solutions/
-│   ├── streaming-sql-pipeline/    # Streaming: CE → Event Hub → Stream Analytics → SQL
-│   │   ├── README.md              # Deployment guide, schema reference, troubleshooting
-│   │   ├── Setup-Guide-Manual.md  # Manual deployment walkthrough (Portal + SQL)
-│   │   ├── Stream-Analytics-SQL-Pipeline.md  # Deep-dive: CE format, ASA queries, MERGE internals
-│   │   └── bootstrap/             # Automated SQL bootstrapping (PowerShell + SQL)
-│   │
-│   └── resource-graph-export/     # Point-in-time Azure Resource Graph queries
-│       ├── Export-ArgFindings.ps1  # ARG-based findings export
-│       ├── Export-ForPowerBI.ps1   # Power BI export (CSV & Log Analytics modes)
-│       └── resourcegraph.kql      # KQL queries for ARG
+├── automation/
+│   └── Setup-ContinuousExport.ps1            # Configure Continuous Export on subscriptions
 │
-└── .infra/
-    └── sql/                        # Terraform for streaming pipeline infrastructure
-        ├── main.tf                 # All resources (~15 resource types)
-        ├── variables.tf            # Input variables with defaults
-        ├── outputs.tf              # Resource IDs, FQDNs, pipeline summary
-        ├── providers.tf            # azurerm ~4.0 + azapi providers
-        └── terraform.tfvars.example # Example variable values
+├── docs/                                     # Concepts, guides, principles, and assets
+│
+└── solutions/
+    ├── streaming-sql-pipeline/               # CE → Event Hub → Stream Analytics → SQL
+    │   ├── README.md                         # Deployment guide, schema reference, troubleshooting
+    │   ├── Setup-Guide-Manual.md             # Manual deployment walkthrough (Portal + SQL)
+    │   ├── Stream-Analytics-SQL-Pipeline.md  # Deep-dive: CE format, ASA queries, MERGE internals
+    │   └── bootstrap/                        # Automated SQL bootstrapping (PowerShell + SQL)
+    └── resource-graph-export/                # Point-in-time ARG queries and CSV exports
+        ├── Export-ArgFindings.ps1            # ARG-based findings export to CSV
+        ├── Export-ForPowerBI.ps1             # Power BI export (CSV & Log Analytics modes)
+        └── resourcegraph.kql                 # KQL queries for Azure Resource Graph
 ```
 
 ## Solutions
 
-| Solution | Path | Description |
-|----------|------|-------------|
-| **Streaming SQL Pipeline** | `solutions/streaming-sql-pipeline/` | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
-| **Resource Graph Export** | `solutions/resource-graph-export/` | Azure Resource Graph queries. Lightweight, no infrastructure needed. Point-in-time exports only (no streaming). |
+| Solution | Description |
+|----------|-------------|
+| [**Streaming SQL Pipeline**](solutions/streaming-sql-pipeline/) | Continuous Export → Event Hub → Stream Analytics → Azure SQL. Full pipeline with staging tables, MERGE stored procs, and Elastic Job scheduling. Deployed via Terraform + bootstrap scripts. |
+| [**Resource Graph Export**](solutions/resource-graph-export/) | Azure Resource Graph queries. Lightweight, no infrastructure needed. Point-in-time exports only (no streaming). |
 
 ## Quick Start - Streaming SQL Pipeline
 
