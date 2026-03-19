@@ -2,7 +2,7 @@
 
 Step-by-step manual deployment of the **CE → Event Hub → Stream Analytics → Azure SQL → Elastic Jobs** pipeline without Terraform. Use this guide when deploying through the Azure Portal and SQL tooling directly.
 
-For the automated (Terraform + Bootstrap) approach, see [README.md](README.md).
+For the automated (Terraform + Bootstrap) approach, see [Setup-Guide-Automated.md](Setup-Guide-Automated.md).
 
 ## Prerequisites
 
@@ -393,7 +393,7 @@ az stream-analytics job start \
 
 ### 8b. Verify the Full Pipeline
 
-See the [Verification checklist](README.md#step-5--wait-for-data-and-verify) in the main README for expected data arrival timings, SQL verification queries, and troubleshooting steps.
+See the [Verification checklist](Setup-Guide-Automated.md#step-5--wait-for-data-and-verify) in the automated setup guide for expected data arrival timings, SQL verification queries, and troubleshooting steps.
 
 ---
 
@@ -427,6 +427,6 @@ See: [Continuous export behind a firewall](https://learn.microsoft.com/en-us/azu
 
 ## Related Documentation
 
-- [Setup-Guide.md](Setup-Guide.md) — Automated deployment with Terraform + bootstrap
+- [Setup-Guide-Automated.md](Setup-Guide-Automated.md) — Automated deployment with Terraform + bootstrap
 - [Stream-Analytics-SQL-Pipeline.md](Stream-Analytics-SQL-Pipeline.md) — Architecture deep-dive, ASA queries, MERGE logic
-- [.infra/sql/README.md](../.infra/sql/README.md) — Terraform deployment reference
+- [.infra/sql/README.md](../../.infra/sql/README.md) — Terraform deployment reference
